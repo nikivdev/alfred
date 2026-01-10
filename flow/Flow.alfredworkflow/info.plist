@@ -8,32 +8,6 @@
 	<string>Tools</string>
 	<key>connections</key>
 	<dict>
-		<key>E1F2A3B4-C5D6-4E7F-8A9B-0C1D2E3F4A5B</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>J1K2L3M4-N5O6-4P7Q-8R9S-0T1U2V3W4X5Y</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-		</array>
-		<key>J1K2L3M4-N5O6-4P7Q-8R9S-0T1U2V3W4X5Y</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-		</array>
 		<key>14F0BD39-4DD0-4942-A46F-1756A1DB4BD3</key>
 		<array>
 			<dict>
@@ -83,6 +57,32 @@
 				<false/>
 			</dict>
 		</array>
+		<key>E1F2A3B4-C5D6-4E7F-8A9B-0C1D2E3F4A5B</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>J1K2L3M4-N5O6-4P7Q-8R9S-0T1U2V3W4X5Y</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>J1K2L3M4-N5O6-4P7Q-8R9S-0T1U2V3W4X5Y</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
 	</dict>
 	<key>createdby</key>
 	<string>nikiv.dev</string>
@@ -94,60 +94,6 @@
 	<string>Flow</string>
 	<key>objects</key>
 	<array>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>availableviaurlhandler</key>
-				<false/>
-				<key>triggerid</key>
-				<string>code</string>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.trigger.external</string>
-			<key>uid</key>
-			<string>E1F2A3B4-C5D6-4E7F-8A9B-0C1D2E3F4A5B</string>
-			<key>version</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>json</key>
-				<string>{
-  "alfredworkflow" : {
-    "arg" : "{query}",
-    "config" : {
-      "title" : "",
-      "runningsubtext" : "",
-      "subtext" : ""
-    },
-    "variables" : {
-    }
-  }
-}</string>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.utility.json</string>
-			<key>uid</key>
-			<string>J1K2L3M4-N5O6-4P7Q-8R9S-0T1U2V3W4X5Y</string>
-			<key>version</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>openwith</key>
-				<string>dev.zed.Zed</string>
-				<key>sourcefile</key>
-				<string>{query}</string>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.action.openfile</string>
-			<key>uid</key>
-			<string>B2C3D4E5-F6A7-4B5C-9D0E-1F2A3B4C5D6E</string>
-			<key>version</key>
-			<integer>3</integer>
-		</dict>
 		<dict>
 			<key>config</key>
 			<dict>
@@ -215,6 +161,60 @@ code_root="${code_root:-~/code}"
 			<string>A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D</string>
 			<key>version</key>
 			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>availableviaurlhandler</key>
+				<false/>
+				<key>triggerid</key>
+				<string>code</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.external</string>
+			<key>uid</key>
+			<string>E1F2A3B4-C5D6-4E7F-8A9B-0C1D2E3F4A5B</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>openwith</key>
+				<string>dev.zed.Zed</string>
+				<key>sourcefile</key>
+				<string>{query}</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.openfile</string>
+			<key>uid</key>
+			<string>B2C3D4E5-F6A7-4B5C-9D0E-1F2A3B4C5D6E</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>json</key>
+				<string>{
+  "alfredworkflow" : {
+    "arg" : "{query}",
+    "config" : {
+      "title" : "",
+      "runningsubtext" : "",
+      "subtext" : ""
+    },
+    "variables" : {
+    }
+  }
+}</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.utility.json</string>
+			<key>uid</key>
+			<string>J1K2L3M4-N5O6-4P7Q-8R9S-0T1U2V3W4X5Y</string>
+			<key>version</key>
+			<integer>1</integer>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -301,20 +301,6 @@ code_root="${code_root:-~/code}"
 	<string>Extension of flow: https://github.com/nikivdev/flow</string>
 	<key>uidata</key>
 	<dict>
-		<key>E1F2A3B4-C5D6-4E7F-8A9B-0C1D2E3F4A5B</key>
-		<dict>
-			<key>xpos</key>
-			<real>100</real>
-			<key>ypos</key>
-			<real>115</real>
-		</dict>
-		<key>J1K2L3M4-N5O6-4P7Q-8R9S-0T1U2V3W4X5Y</key>
-		<dict>
-			<key>xpos</key>
-			<real>250</real>
-			<key>ypos</key>
-			<real>115</real>
-		</dict>
 		<key>14F0BD39-4DD0-4942-A46F-1756A1DB4BD3</key>
 		<dict>
 			<key>xpos</key>
@@ -332,7 +318,7 @@ code_root="${code_root:-~/code}"
 		<key>A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D</key>
 		<dict>
 			<key>xpos</key>
-			<real>395</real>
+			<real>355</real>
 			<key>ypos</key>
 			<real>115</real>
 		</dict>
@@ -346,7 +332,7 @@ code_root="${code_root:-~/code}"
 		<key>B2C3D4E5-F6A7-4B5C-9D0E-1F2A3B4C5D6E</key>
 		<dict>
 			<key>xpos</key>
-			<real>595</real>
+			<real>555</real>
 			<key>ypos</key>
 			<real>115</real>
 		</dict>
@@ -356,6 +342,20 @@ code_root="${code_root:-~/code}"
 			<real>270</real>
 			<key>ypos</key>
 			<real>415</real>
+		</dict>
+		<key>E1F2A3B4-C5D6-4E7F-8A9B-0C1D2E3F4A5B</key>
+		<dict>
+			<key>xpos</key>
+			<real>100</real>
+			<key>ypos</key>
+			<real>115</real>
+		</dict>
+		<key>J1K2L3M4-N5O6-4P7Q-8R9S-0T1U2V3W4X5Y</key>
+		<dict>
+			<key>xpos</key>
+			<real>280</real>
+			<key>ypos</key>
+			<real>145</real>
 		</dict>
 	</dict>
 	<key>userconfigurationconfig</key>
