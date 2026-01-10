@@ -173,13 +173,12 @@ fn run_repos_search(query: &str, root: &str) {
             let relative_path = format!("{}/{}", root, &entry.display);
             Item::title_only(&entry.display)
                 .uid(&path_str)
-                .arg(&path_str)
+                .arg(&path_str)  // Full path for opening
                 .match_field(&entry.display)
                 .autocomplete(&entry.display)
-                .file_type()
                 .icon(Icon::fileicon(&path_str))
                 .quicklook(&path_str)
-                .copy_text(&relative_path)
+                .copy_text(&relative_path)  // Relative path for copy
         })
         .collect();
 

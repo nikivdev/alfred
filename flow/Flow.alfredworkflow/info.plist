@@ -191,17 +191,25 @@ code_root="${code_root:-~/code}"
 		<dict>
 			<key>config</key>
 			<dict>
-				<key>openwith</key>
-				<string>dev.zed.Zed</string>
-				<key>sourcefile</key>
-				<string>{query}</string>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>open -a "Zed" "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
 			</dict>
 			<key>type</key>
-			<string>alfred.workflow.action.openfile</string>
+			<string>alfred.workflow.action.script</string>
 			<key>uid</key>
 			<string>B2C3D4E5-F6A7-4B5C-9D0E-1F2A3B4C5D6E</string>
 			<key>version</key>
-			<integer>3</integer>
+			<integer>2</integer>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -245,17 +253,25 @@ code_root="${code_root:-~/code}"
 		<dict>
 			<key>config</key>
 			<dict>
-				<key>openwith</key>
-				<string>dev.zed.Zed</string>
-				<key>sourcefile</key>
-				<string>{query}</string>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>open -a "Zed" "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
 			</dict>
 			<key>type</key>
-			<string>alfred.workflow.action.openfile</string>
+			<string>alfred.workflow.action.script</string>
 			<key>uid</key>
 			<string>REPOS-OPEN-FILE-UID</string>
 			<key>version</key>
-			<integer>3</integer>
+			<integer>2</integer>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -311,7 +327,7 @@ code_root="${code_root:-~/code}"
 				<key>title</key>
 				<string>Repos Search</string>
 				<key>type</key>
-				<integer>0</integer>
+				<integer>4</integer>
 				<key>withspace</key>
 				<true/>
 			</dict>
