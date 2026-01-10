@@ -21,6 +21,19 @@
 				<false/>
 			</dict>
 		</array>
+		<key>9D8DCB6B-8E82-414E-99D3-3FF55A6E2A12</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>REPOS-SCRIPT-FILTER-UID</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
 		<key>A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D</key>
 		<array>
 			<dict>
@@ -61,7 +74,7 @@
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>J1K2L3M4-N5O6-4P7Q-8R9S-0T1U2V3W4X5Y</string>
+				<string>A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -70,11 +83,24 @@
 				<false/>
 			</dict>
 		</array>
-		<key>J1K2L3M4-N5O6-4P7Q-8R9S-0T1U2V3W4X5Y</key>
+		<key>REPOS-EXT-TRIGGER-UID</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D</string>
+				<string>9D8DCB6B-8E82-414E-99D3-3FF55A6E2A12</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>REPOS-SCRIPT-FILTER-UID</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>REPOS-OPEN-FILE-UID</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -106,7 +132,7 @@
 				<key>argumenttrimmode</key>
 				<integer>0</integer>
 				<key>argumenttype</key>
-				<integer>0</integer>
+				<integer>1</integer>
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>keyword</key>
@@ -165,21 +191,6 @@ code_root="${code_root:-~/code}"
 		<dict>
 			<key>config</key>
 			<dict>
-				<key>availableviaurlhandler</key>
-				<false/>
-				<key>triggerid</key>
-				<string>code</string>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.trigger.external</string>
-			<key>uid</key>
-			<string>E1F2A3B4-C5D6-4E7F-8A9B-0C1D2E3F4A5B</string>
-			<key>version</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
 				<key>openwith</key>
 				<string>dev.zed.Zed</string>
 				<key>sourcefile</key>
@@ -191,6 +202,21 @@ code_root="${code_root:-~/code}"
 			<string>B2C3D4E5-F6A7-4B5C-9D0E-1F2A3B4C5D6E</string>
 			<key>version</key>
 			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>availableviaurlhandler</key>
+				<false/>
+				<key>triggerid</key>
+				<string>code</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.external</string>
+			<key>uid</key>
+			<string>E1F2A3B4-C5D6-4E7F-8A9B-0C1D2E3F4A5B</string>
+			<key>version</key>
+			<integer>1</integer>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -219,6 +245,110 @@ code_root="${code_root:-~/code}"
 		<dict>
 			<key>config</key>
 			<dict>
+				<key>openwith</key>
+				<string>dev.zed.Zed</string>
+				<key>sourcefile</key>
+				<string>{query}</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.openfile</string>
+			<key>uid</key>
+			<string>REPOS-OPEN-FILE-UID</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>availableviaurlhandler</key>
+				<false/>
+				<key>triggerid</key>
+				<string>repos</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.external</string>
+			<key>uid</key>
+			<string>REPOS-EXT-TRIGGER-UID</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<true/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>2</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<false/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>repos</string>
+				<key>queuedelaycustom</key>
+				<integer>1</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>Searching repos...</string>
+				<key>script</key>
+				<string>#!/bin/bash
+"$HOME/.cargo/bin/flow-alfred" repos --root ~/repos "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>Search git repositories in ~/repos</string>
+				<key>title</key>
+				<string>Repos Search</string>
+				<key>type</key>
+				<integer>0</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>REPOS-SCRIPT-FILTER-UID</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>json</key>
+				<string>{
+  "alfredworkflow" : {
+    "arg" : "{query}",
+    "config" : {
+      "title" : "",
+      "runningsubtext" : "",
+      "subtext" : ""
+    },
+    "variables" : {
+    }
+  }
+}</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.utility.json</string>
+			<key>uid</key>
+			<string>9D8DCB6B-8E82-414E-99D3-3FF55A6E2A12</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
 				<key>argumenttype</key>
 				<integer>0</integer>
 				<key>subtext</key>
@@ -232,21 +362,6 @@ code_root="${code_root:-~/code}"
 			<string>alfred.workflow.input.keyword</string>
 			<key>uid</key>
 			<string>DEBCD6DE-5BEB-4EB8-8EBB-7929AEDC5A35</string>
-			<key>version</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>availableviaurlhandler</key>
-				<false/>
-				<key>triggerid</key>
-				<string>text_to_docs_and_text</string>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.trigger.external</string>
-			<key>uid</key>
-			<string>14F0BD39-4DD0-4942-A46F-1756A1DB4BD3</string>
 			<key>version</key>
 			<integer>1</integer>
 		</dict>
@@ -272,6 +387,21 @@ code_root="${code_root:-~/code}"
 			<string>AD65F56E-8553-47D0-A78B-304CE7AC7EA2</string>
 			<key>version</key>
 			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>availableviaurlhandler</key>
+				<false/>
+				<key>triggerid</key>
+				<string>text_to_docs_and_text</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.external</string>
+			<key>uid</key>
+			<string>14F0BD39-4DD0-4942-A46F-1756A1DB4BD3</string>
+			<key>version</key>
+			<integer>1</integer>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -304,16 +434,23 @@ code_root="${code_root:-~/code}"
 		<key>14F0BD39-4DD0-4942-A46F-1756A1DB4BD3</key>
 		<dict>
 			<key>xpos</key>
-			<real>100</real>
+			<real>80</real>
 			<key>ypos</key>
-			<real>415</real>
+			<real>490</real>
 		</dict>
 		<key>2542EB08-00D0-492F-9E91-61C123D9D25F</key>
 		<dict>
 			<key>xpos</key>
-			<real>600</real>
+			<real>580</real>
 			<key>ypos</key>
-			<real>560</real>
+			<real>635</real>
+		</dict>
+		<key>9D8DCB6B-8E82-414E-99D3-3FF55A6E2A12</key>
+		<dict>
+			<key>xpos</key>
+			<real>265</real>
+			<key>ypos</key>
+			<real>300</real>
 		</dict>
 		<key>A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D</key>
 		<dict>
@@ -325,9 +462,9 @@ code_root="${code_root:-~/code}"
 		<key>AD65F56E-8553-47D0-A78B-304CE7AC7EA2</key>
 		<dict>
 			<key>xpos</key>
-			<real>595</real>
+			<real>575</real>
 			<key>ypos</key>
-			<real>415</real>
+			<real>490</real>
 		</dict>
 		<key>B2C3D4E5-F6A7-4B5C-9D0E-1F2A3B4C5D6E</key>
 		<dict>
@@ -339,9 +476,9 @@ code_root="${code_root:-~/code}"
 		<key>DEBCD6DE-5BEB-4EB8-8EBB-7929AEDC5A35</key>
 		<dict>
 			<key>xpos</key>
-			<real>270</real>
+			<real>250</real>
 			<key>ypos</key>
-			<real>415</real>
+			<real>490</real>
 		</dict>
 		<key>E1F2A3B4-C5D6-4E7F-8A9B-0C1D2E3F4A5B</key>
 		<dict>
@@ -356,6 +493,27 @@ code_root="${code_root:-~/code}"
 			<real>280</real>
 			<key>ypos</key>
 			<real>145</real>
+		</dict>
+		<key>REPOS-EXT-TRIGGER-UID</key>
+		<dict>
+			<key>xpos</key>
+			<real>100</real>
+			<key>ypos</key>
+			<real>270</real>
+		</dict>
+		<key>REPOS-OPEN-FILE-UID</key>
+		<dict>
+			<key>xpos</key>
+			<real>555</real>
+			<key>ypos</key>
+			<real>270</real>
+		</dict>
+		<key>REPOS-SCRIPT-FILTER-UID</key>
+		<dict>
+			<key>xpos</key>
+			<real>355</real>
+			<key>ypos</key>
+			<real>270</real>
 		</dict>
 	</dict>
 	<key>userconfigurationconfig</key>

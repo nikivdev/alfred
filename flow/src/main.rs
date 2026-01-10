@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
-use flow_alfred::{discover_repos, expand_path, fuzzy_match, fuzzy_sort, Icon, Item, Output};
+use flow_alfred::{discover_repos, discover_repos_structured, expand_path, fuzzy_match, fuzzy_sort, Icon, Item, Output};
 
 #[derive(Parser)]
 #[command(name = "flow-alfred")]
@@ -21,6 +21,17 @@ enum Commands {
 
         /// Root directory to scan
         #[arg(long, default_value = "~/code")]
+        root: String,
+    },
+
+    /// Search git repositories under ~/repos (owner/repo structure)
+    Repos {
+        /// Search query
+        #[arg(default_value = "")]
+        query: String,
+
+        /// Root directory to scan
+        #[arg(long, default_value = "~/repos")]
         root: String,
     },
 
@@ -65,6 +76,7 @@ fn main() {
 
     match cli.command {
         Commands::Code { query, root } => run_code_search(&query, &root),
+        Commands::Repos { query, root } => run_repos_search(&query, &root),
         Commands::Link {
             workflow_dir,
             bundle_id,
@@ -108,7 +120,8 @@ fn run_code_search(query: &str, root: &str) {
         .filter(|e| query.is_empty() || fuzzy_match(query, &e.display))
         .map(|entry| {
             let path_str = entry.path.to_string_lossy().to_string();
-            Item::new(&entry.display, &path_str)
+            let relative_path = format!("{}/{}", root, &entry.display);
+            Item::title_only(&entry.display)
                 .uid(&path_str)
                 .arg(&path_str)
                 .match_field(&entry.display)
@@ -116,6 +129,57 @@ fn run_code_search(query: &str, root: &str) {
                 .file_type()
                 .icon(Icon::fileicon(&path_str))
                 .quicklook(&path_str)
+                .copy_text(&relative_path)
+        })
+        .collect();
+
+    if !query.is_empty() {
+        fuzzy_sort(&mut items, query, |item| &item.title);
+    }
+
+    Output::new(items).print();
+}
+
+fn run_repos_search(query: &str, root: &str) {
+    let root_path = expand_path(root);
+
+    if !root_path.exists() {
+        Output::new(vec![Item::new(
+            format!("No directory found at {}", root),
+            "Check your repos_root setting",
+        )
+        .valid(false)
+        .icon(Icon::path(
+            "/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/AlertStopIcon.icns",
+        ))])
+        .print();
+        return;
+    }
+
+    let repos = discover_repos_structured(&root_path);
+    if repos.is_empty() {
+        Output::new(vec![Item::new("No git repositories found", format!("in {}", root))
+            .valid(false)
+            .icon(Icon::path("/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/GenericFolderIcon.icns"))])
+            .print();
+        return;
+    }
+
+    let mut items: Vec<Item> = repos
+        .iter()
+        .filter(|e| query.is_empty() || fuzzy_match(query, &e.display))
+        .map(|entry| {
+            let path_str = entry.path.to_string_lossy().to_string();
+            let relative_path = format!("{}/{}", root, &entry.display);
+            Item::title_only(&entry.display)
+                .uid(&path_str)
+                .arg(&path_str)
+                .match_field(&entry.display)
+                .autocomplete(&entry.display)
+                .file_type()
+                .icon(Icon::fileicon(&path_str))
+                .quicklook(&path_str)
+                .copy_text(&relative_path)
         })
         .collect();
 

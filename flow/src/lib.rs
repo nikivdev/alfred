@@ -505,6 +505,68 @@ pub fn discover_repos(root: &Path) -> Vec<CodeEntry> {
     repos
 }
 
+/// Discover git repositories in owner/repo structure (like ~/repos)
+pub fn discover_repos_structured(root: &Path) -> Vec<CodeEntry> {
+    let mut repos = Vec::new();
+
+    // Read owner directories
+    let owners = match fs::read_dir(root) {
+        Ok(entries) => entries,
+        Err(_) => return repos,
+    };
+
+    for owner_entry in owners.flatten() {
+        let owner_path = owner_entry.path();
+        if !owner_path.is_dir() {
+            continue;
+        }
+
+        let owner_name = match owner_path.file_name() {
+            Some(name) => name.to_string_lossy().to_string(),
+            None => continue,
+        };
+
+        // Skip hidden directories
+        if owner_name.starts_with('.') {
+            continue;
+        }
+
+        // Read repo directories under each owner
+        let repo_entries = match fs::read_dir(&owner_path) {
+            Ok(entries) => entries,
+            Err(_) => continue,
+        };
+
+        for repo_entry in repo_entries.flatten() {
+            let repo_path = repo_entry.path();
+            if !repo_path.is_dir() {
+                continue;
+            }
+
+            let repo_name = match repo_path.file_name() {
+                Some(name) => name.to_string_lossy().to_string(),
+                None => continue,
+            };
+
+            // Skip hidden directories
+            if repo_name.starts_with('.') {
+                continue;
+            }
+
+            // Check if it's a git repo
+            if repo_path.join(".git").exists() {
+                repos.push(CodeEntry {
+                    display: format!("{}/{}", owner_name, repo_name),
+                    path: repo_path,
+                });
+            }
+        }
+    }
+
+    repos.sort_by(|a, b| a.display.cmp(&b.display));
+    repos
+}
+
 fn should_skip_dir(name: &str) -> bool {
     if name.starts_with('.') {
         return true;
@@ -528,6 +590,307 @@ fn should_skip_dir(name: &str) -> bool {
             | ".turbo"
             | ".cache"
     )
+}
+
+// ============================================================================
+// Workflow Object Builders (for info.plist generation)
+// ============================================================================
+
+/// Argument type for Script Filters
+#[derive(Debug, Clone, Copy, Default)]
+pub enum ArgumentType {
+    /// Argument is required (argumenttype = 0)
+    Required,
+    /// Argument is optional (argumenttype = 1) - USE THIS for external triggers
+    #[default]
+    Optional,
+    /// No argument accepted (argumenttype = 2)
+    None,
+}
+
+impl ArgumentType {
+    pub fn to_plist_value(&self) -> u8 {
+        match self {
+            ArgumentType::Required => 0,
+            ArgumentType::Optional => 1,
+            ArgumentType::None => 2,
+        }
+    }
+}
+
+/// Script Filter configuration
+#[derive(Debug, Clone)]
+pub struct ScriptFilter {
+    pub uid: String,
+    pub keyword: String,
+    pub title: String,
+    pub subtitle: String,
+    pub running_subtext: String,
+    pub script: String,
+    pub argument_type: ArgumentType,
+    pub with_space: bool,
+    pub alfred_filters_results: bool,
+    pub queue_delay_immediately: bool,
+}
+
+impl ScriptFilter {
+    pub fn new(uid: &str, keyword: &str) -> Self {
+        Self {
+            uid: uid.to_string(),
+            keyword: keyword.to_string(),
+            title: String::new(),
+            subtitle: String::new(),
+            running_subtext: "Loading...".to_string(),
+            script: String::new(),
+            argument_type: ArgumentType::Optional, // Default to optional for external trigger support
+            with_space: false,
+            alfred_filters_results: false,
+            queue_delay_immediately: true,
+        }
+    }
+
+    pub fn title(mut self, title: &str) -> Self {
+        self.title = title.to_string();
+        self
+    }
+
+    pub fn subtitle(mut self, subtitle: &str) -> Self {
+        self.subtitle = subtitle.to_string();
+        self
+    }
+
+    pub fn running_subtext(mut self, text: &str) -> Self {
+        self.running_subtext = text.to_string();
+        self
+    }
+
+    pub fn script(mut self, script: &str) -> Self {
+        self.script = script.to_string();
+        self
+    }
+
+    pub fn argument_type(mut self, arg_type: ArgumentType) -> Self {
+        self.argument_type = arg_type;
+        self
+    }
+
+    pub fn with_space(mut self, with_space: bool) -> Self {
+        self.with_space = with_space;
+        self
+    }
+
+    pub fn alfred_filters_results(mut self, filters: bool) -> Self {
+        self.alfred_filters_results = filters;
+        self
+    }
+
+    /// Generate plist XML for this Script Filter object
+    pub fn to_plist_object(&self) -> String {
+        let script_escaped = xml_escape(&self.script);
+        format!(
+            r#"<dict>
+    <key>config</key>
+    <dict>
+        <key>alfredfiltersresults</key>
+        <{alfredfiltersresults}/>
+        <key>alfredfiltersresultsmatchmode</key>
+        <integer>2</integer>
+        <key>argumenttreatemptyqueryasnil</key>
+        <false/>
+        <key>argumenttrimmode</key>
+        <integer>0</integer>
+        <key>argumenttype</key>
+        <integer>{argumenttype}</integer>
+        <key>escaping</key>
+        <integer>102</integer>
+        <key>keyword</key>
+        <string>{keyword}</string>
+        <key>queuedelaycustom</key>
+        <integer>1</integer>
+        <key>queuedelayimmediatelyinitially</key>
+        <{queuedelayimmediately}/>
+        <key>queuedelaymode</key>
+        <integer>0</integer>
+        <key>queuemode</key>
+        <integer>1</integer>
+        <key>runningsubtext</key>
+        <string>{runningsubtext}</string>
+        <key>script</key>
+        <string>{script}</string>
+        <key>scriptargtype</key>
+        <integer>1</integer>
+        <key>scriptfile</key>
+        <string></string>
+        <key>subtext</key>
+        <string>{subtitle}</string>
+        <key>title</key>
+        <string>{title}</string>
+        <key>type</key>
+        <integer>0</integer>
+        <key>withspace</key>
+        <{withspace}/>
+    </dict>
+    <key>type</key>
+    <string>alfred.workflow.input.scriptfilter</string>
+    <key>uid</key>
+    <string>{uid}</string>
+    <key>version</key>
+    <integer>3</integer>
+</dict>"#,
+            alfredfiltersresults = if self.alfred_filters_results { "true" } else { "false" },
+            argumenttype = self.argument_type.to_plist_value(),
+            keyword = xml_escape(&self.keyword),
+            queuedelayimmediately = if self.queue_delay_immediately { "true" } else { "false" },
+            runningsubtext = xml_escape(&self.running_subtext),
+            script = script_escaped,
+            subtitle = xml_escape(&self.subtitle),
+            title = xml_escape(&self.title),
+            withspace = if self.with_space { "true" } else { "false" },
+            uid = &self.uid,
+        )
+    }
+}
+
+/// External Trigger configuration
+#[derive(Debug, Clone)]
+pub struct ExternalTrigger {
+    pub uid: String,
+    pub trigger_id: String,
+    pub available_via_url: bool,
+}
+
+impl ExternalTrigger {
+    pub fn new(uid: &str, trigger_id: &str) -> Self {
+        Self {
+            uid: uid.to_string(),
+            trigger_id: trigger_id.to_string(),
+            available_via_url: false,
+        }
+    }
+
+    pub fn available_via_url(mut self, available: bool) -> Self {
+        self.available_via_url = available;
+        self
+    }
+
+    /// Generate plist XML for this External Trigger object
+    pub fn to_plist_object(&self) -> String {
+        format!(
+            r#"<dict>
+    <key>config</key>
+    <dict>
+        <key>availableviaurlhandler</key>
+        <{available_via_url}/>
+        <key>triggerid</key>
+        <string>{trigger_id}</string>
+    </dict>
+    <key>type</key>
+    <string>alfred.workflow.trigger.external</string>
+    <key>uid</key>
+    <string>{uid}</string>
+    <key>version</key>
+    <integer>1</integer>
+</dict>"#,
+            available_via_url = if self.available_via_url { "true" } else { "false" },
+            trigger_id = xml_escape(&self.trigger_id),
+            uid = &self.uid,
+        )
+    }
+}
+
+/// Open File action configuration
+#[derive(Debug, Clone)]
+pub struct OpenFileAction {
+    pub uid: String,
+    pub open_with: Option<String>,
+}
+
+impl OpenFileAction {
+    pub fn new(uid: &str) -> Self {
+        Self {
+            uid: uid.to_string(),
+            open_with: None,
+        }
+    }
+
+    pub fn open_with(mut self, app_bundle_id: &str) -> Self {
+        self.open_with = Some(app_bundle_id.to_string());
+        self
+    }
+
+    /// Generate plist XML for this Open File action
+    pub fn to_plist_object(&self) -> String {
+        let open_with = self.open_with.as_deref().unwrap_or("");
+        format!(
+            r#"<dict>
+    <key>config</key>
+    <dict>
+        <key>openwith</key>
+        <string>{open_with}</string>
+        <key>sourcefile</key>
+        <string>{{query}}</string>
+    </dict>
+    <key>type</key>
+    <string>alfred.workflow.action.openfile</string>
+    <key>uid</key>
+    <string>{uid}</string>
+    <key>version</key>
+    <integer>3</integer>
+</dict>"#,
+            open_with = xml_escape(open_with),
+            uid = &self.uid,
+        )
+    }
+}
+
+/// Connection between workflow objects
+#[derive(Debug, Clone)]
+pub struct Connection {
+    pub source_uid: String,
+    pub dest_uid: String,
+    pub modifiers: u32, // 0 = none, 1048576 = cmd
+}
+
+impl Connection {
+    pub fn new(source: &str, dest: &str) -> Self {
+        Self {
+            source_uid: source.to_string(),
+            dest_uid: dest.to_string(),
+            modifiers: 0,
+        }
+    }
+
+    pub fn with_cmd(mut self) -> Self {
+        self.modifiers = 1048576;
+        self
+    }
+}
+
+/// UI position for workflow canvas
+#[derive(Debug, Clone)]
+pub struct UIPosition {
+    pub uid: String,
+    pub x: f64,
+    pub y: f64,
+}
+
+impl UIPosition {
+    pub fn new(uid: &str, x: f64, y: f64) -> Self {
+        Self {
+            uid: uid.to_string(),
+            x,
+            y,
+        }
+    }
+}
+
+/// Helper to escape XML special characters
+fn xml_escape(s: &str) -> String {
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+        .replace('\'', "&apos;")
 }
 
 // ============================================================================
