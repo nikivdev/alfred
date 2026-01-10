@@ -1,1 +1,41 @@
+# core
+.DS_Store
+.env
+.env*.local
+.env.production
+output
+dist
+target
+.idea
+.cache
+.output
+node_modules
+package-lock.json
+yarn.lock
+.vercel
+*.db
+.repo_ignore
+i.*
+i-*
+i/
+internal/
+past.*
+past-*
+past/
+*.log
+private
+.npm-cache
+.cargo_home
+
 .ai/internal/
+
+# Rust build artifacts
+flow/target/
+flow/Cargo.lock
+
+# Packaged workflows
+*.alfredworkflow
+!*.alfredworkflow/
+
+# Binary in workflow dir
+flow/Flow.alfredworkflow/flow-alfred

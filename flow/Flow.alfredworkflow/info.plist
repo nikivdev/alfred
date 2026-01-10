@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string>nikiv.dev.flow</string>
+	<key>category</key>
+	<string>Tools</string>
+	<key>connections</key>
+	<dict>
+		<key>14F0BD39-4DD0-4942-A46F-1756A1DB4BD3</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>DEBCD6DE-5BEB-4EB8-8EBB-7929AEDC5A35</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>B2C3D4E5-F6A7-4B5C-9D0E-1F2A3B4C5D6E</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>DEBCD6DE-5BEB-4EB8-8EBB-7929AEDC5A35</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>AD65F56E-8553-47D0-A78B-304CE7AC7EA2</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>2542EB08-00D0-492F-9E91-61C123D9D25F</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string>nikiv.dev</string>
+	<key>description</key>
+	<string>Everything you need to move your project faster</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>Flow</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>openwith</key>
+				<string>dev.zed.Zed</string>
+				<key>sourcefile</key>
+				<string>{query}</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.openfile</string>
+			<key>uid</key>
+			<string>B2C3D4E5-F6A7-4B5C-9D0E-1F2A3B4C5D6E</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<true/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>2</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<false/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>0</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>code</string>
+				<key>queuedelaycustom</key>
+				<integer>1</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>Searching projects...</string>
+				<key>script</key>
+				<string>#!/bin/bash
+
+# Find flow-alfred binary
+flow_bin=""
+if [ -x "$HOME/.cargo/bin/flow-alfred" ]; then
+    flow_bin="$HOME/.cargo/bin/flow-alfred"
+elif [ -x "/usr/local/bin/flow-alfred" ]; then
+    flow_bin="/usr/local/bin/flow-alfred"
+elif command -v flow-alfred &amp;&gt;/dev/null; then
+    flow_bin="flow-alfred"
+else
+    echo '{"items": [{"title": "flow-alfred not found", "subtitle": "Run: cargo install --path /path/to/alfred/flow", "valid": false}]}'
+    exit 0
+fi
+
+# Get configuration
+code_root="${code_root:-~/code}"
+
+# Execute and return JSON
+"$flow_bin" code --root "$code_root" "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>Search git repositories in ~/code</string>
+				<key>title</key>
+				<string>Code Search</string>
+				<key>type</key>
+				<integer>4</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argumenttype</key>
+				<integer>0</integer>
+				<key>subtext</key>
+				<string></string>
+				<key>text</key>
+				<string></string>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.keyword</string>
+			<key>uid</key>
+			<string>DEBCD6DE-5BEB-4EB8-8EBB-7929AEDC5A35</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>availableviaurlhandler</key>
+				<false/>
+				<key>triggerid</key>
+				<string>text_to_docs_and_text</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.external</string>
+			<key>uid</key>
+			<string>14F0BD39-4DD0-4942-A46F-1756A1DB4BD3</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>/Users/nikiv/bin/frs write-doc run "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>11</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>AD65F56E-8553-47D0-A78B-304CE7AC7EA2</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>/Users/nikiv/bin/frs write-doc paste "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>11</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>2542EB08-00D0-492F-9E91-61C123D9D25F</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string>Extension of flow: https://github.com/nikivdev/flow</string>
+	<key>uidata</key>
+	<dict>
+		<key>14F0BD39-4DD0-4942-A46F-1756A1DB4BD3</key>
+		<dict>
+			<key>xpos</key>
+			<real>100</real>
+			<key>ypos</key>
+			<real>415</real>
+		</dict>
+		<key>2542EB08-00D0-492F-9E91-61C123D9D25F</key>
+		<dict>
+			<key>xpos</key>
+			<real>600</real>
+			<key>ypos</key>
+			<real>560</real>
+		</dict>
+		<key>A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D</key>
+		<dict>
+			<key>xpos</key>
+			<real>395</real>
+			<key>ypos</key>
+			<real>115</real>
+		</dict>
+		<key>AD65F56E-8553-47D0-A78B-304CE7AC7EA2</key>
+		<dict>
+			<key>xpos</key>
+			<real>595</real>
+			<key>ypos</key>
+			<real>415</real>
+		</dict>
+		<key>B2C3D4E5-F6A7-4B5C-9D0E-1F2A3B4C5D6E</key>
+		<dict>
+			<key>xpos</key>
+			<real>595</real>
+			<key>ypos</key>
+			<real>115</real>
+		</dict>
+		<key>DEBCD6DE-5BEB-4EB8-8EBB-7929AEDC5A35</key>
+		<dict>
+			<key>xpos</key>
+			<real>270</real>
+			<key>ypos</key>
+			<real>415</real>
+		</dict>
+	</dict>
+	<key>userconfigurationconfig</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string>~/code</string>
+				<key>placeholder</key>
+				<string>~/code</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Root directory to scan for git repositories</string>
+			<key>label</key>
+			<string>Code Root</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>code_root</string>
+		</dict>
+	</array>
+	<key>version</key>
+	<string>0.1.0</string>
+	<key>webaddress</key>
+	<string>https://nikiv.dev</string>
+</dict>
+</plist>

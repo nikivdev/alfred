@@ -1,0 +1,27 @@
+[package]
+name = "flow-alfred"
+version = "0.1.0"
+edition = "2021"
+description = "Alfred workflow library and tools"
+license = "MIT"
+repository = "https://github.com/nikivdev/alfred"
+keywords = ["alfred", "macos", "workflow", "productivity"]
+categories = ["development-tools"]
+
+[lib]
+name = "flow_alfred"
+path = "src/lib.rs"
+
+[[bin]]
+name = "flow-alfred"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1
