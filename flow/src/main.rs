@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
-use flow_alfred::{discover_repos, discover_repos_structured, expand_path, fuzzy_match, fuzzy_sort, Icon, Item, Output};
+use flow_alfred::{discover_repos, discover_repos_structured, expand_path, fuzzy_match, fuzzy_sort, reload_workflow, Icon, Item, Output};
 
 #[derive(Parser)]
 #[command(name = "flow-alfred")]
@@ -69,6 +69,13 @@ enum Commands {
         /// Path to .alfredworkflow file
         workflow_file: String,
     },
+
+    /// Reload workflow in Alfred (refresh canvas without restart)
+    Reload {
+        /// Bundle ID
+        #[arg(long, default_value = "nikiv.dev.flow")]
+        bundle_id: String,
+    },
 }
 
 fn main() {
@@ -87,6 +94,7 @@ fn main() {
             output,
         } => run_pack(&workflow_dir, output),
         Commands::Install { workflow_file } => run_install(&workflow_file),
+        Commands::Reload { bundle_id } => run_reload(&bundle_id),
     }
 }
 
@@ -217,7 +225,15 @@ fn run_link(workflow_dir: &str, bundle_id: &str) {
     }
 
     match flow_alfred::link_workflow(&workflow_path, bundle_id) {
-        Ok(dest) => println!("Linked {:?} -> {:?}", workflow_path, dest),
+        Ok(dest) => {
+            println!("Linked {:?} -> {:?}", workflow_path, dest);
+            // Reload workflow in Alfred
+            if let Err(e) = reload_workflow(bundle_id) {
+                eprintln!("Warning: Failed to reload workflow: {}", e);
+            } else {
+                println!("Reloaded workflow in Alfred");
+            }
+        }
         Err(e) => {
             eprintln!("Failed to link: {}", e);
             std::process::exit(1);
@@ -266,6 +282,16 @@ fn run_install(workflow_file: &str) {
         Ok(()) => println!("Opening {:?} for installation...", path),
         Err(e) => {
             eprintln!("Failed to install: {}", e);
+            std::process::exit(1);
+        }
+    }
+}
+
+fn run_reload(bundle_id: &str) {
+    match reload_workflow(bundle_id) {
+        Ok(()) => println!("Reloaded workflow: {}", bundle_id),
+        Err(e) => {
+            eprintln!("Failed to reload: {}", e);
             std::process::exit(1);
         }
     }

@@ -356,6 +356,15 @@ pub fn unlink_workflow(bundle_id: &str) -> Result<(), String> {
     Ok(())
 }
 
+/// Reload a workflow in Alfred (refreshes canvas without restart)
+pub fn reload_workflow(bundle_id: &str) -> Result<(), String> {
+    Command::new("osascript")
+        .args(["-e", &format!("tell application \"Alfred\" to reload workflow \"{}\"", bundle_id)])
+        .output()
+        .map_err(|e| format!("Failed to reload workflow: {}", e))?;
+    Ok(())
+}
+
 /// Pack a workflow directory into .alfredworkflow file
 pub fn pack_workflow(workflow_dir: &Path, output_path: &Path) -> Result<(), String> {
     Command::new("zip")
