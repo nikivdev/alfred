@@ -46,6 +46,16 @@
 				<key>vitoclose</key>
 				<false/>
 			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>PASTE-PATH-CLIPBOARD-UID</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
 		</array>
 		<key>DEBCD6DE-5BEB-4EB8-8EBB-7929AEDC5A35</key>
 		<array>
@@ -103,6 +113,16 @@
 				<string>REPOS-OPEN-FILE-UID</string>
 				<key>modifiers</key>
 				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>PASTE-PATH-CLIPBOARD-UID</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
 				<key>modifiersubtext</key>
 				<string></string>
 				<key>vitoclose</key>
@@ -210,6 +230,25 @@ code_root="${code_root:-~/code}"
 			<string>B2C3D4E5-F6A7-4B5C-9D0E-1F2A3B4C5D6E</string>
 			<key>version</key>
 			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>autopaste</key>
+				<true/>
+				<key>clipboardtext</key>
+				<string>{query}</string>
+				<key>ignoredynamicplaceholders</key>
+				<false/>
+				<key>transient</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.clipboard</string>
+			<key>uid</key>
+			<string>PASTE-PATH-CLIPBOARD-UID</string>
+			<key>version</key>
+			<integer>3</integer>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -530,6 +569,13 @@ code_root="${code_root:-~/code}"
 			<real>355</real>
 			<key>ypos</key>
 			<real>270</real>
+		</dict>
+		<key>PASTE-PATH-CLIPBOARD-UID</key>
+		<dict>
+			<key>xpos</key>
+			<real>755</real>
+			<key>ypos</key>
+			<real>195</real>
 		</dict>
 	</dict>
 	<key>userconfigurationconfig</key>

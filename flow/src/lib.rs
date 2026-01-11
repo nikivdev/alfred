@@ -190,6 +190,28 @@ impl Item {
         }
         self
     }
+
+    /// Set cmd modifier action (Cmd+Return)
+    pub fn cmd_mod(mut self, arg: impl Into<String>, subtitle: impl Into<String>) -> Self {
+        let mods = self.mods.get_or_insert_with(Mods::default);
+        mods.cmd = Some(ModItem {
+            valid: Some(true),
+            arg: Some(arg.into()),
+            subtitle: Some(subtitle.into()),
+        });
+        self
+    }
+
+    /// Set alt modifier action (Alt/Option+Return)
+    pub fn alt_mod(mut self, arg: impl Into<String>, subtitle: impl Into<String>) -> Self {
+        let mods = self.mods.get_or_insert_with(Mods::default);
+        mods.alt = Some(ModItem {
+            valid: Some(true),
+            arg: Some(arg.into()),
+            subtitle: Some(subtitle.into()),
+        });
+        self
+    }
 }
 
 /// Icon for Alfred item

@@ -121,7 +121,14 @@ fn run_code_search(query: &str, root: &str) {
         .map(|entry| {
             let path_str = entry.path.to_string_lossy().to_string();
             let relative_path = format!("{}/{}", root, &entry.display);
-            Item::title_only(&entry.display)
+            // Condense when last two path segments are the same (e.g., "org/gitedit/gitedit" -> "org/gitedit")
+            let parts: Vec<&str> = entry.display.rsplitn(2, '/').collect();
+            let display = if parts.len() == 2 && parts[0] == parts[1].rsplit('/').next().unwrap_or("") {
+                entry.display.rsplit_once('/').map(|(prefix, _)| prefix.to_string()).unwrap_or_else(|| entry.display.clone())
+            } else {
+                entry.display.clone()
+            };
+            Item::title_only(&display)
                 .uid(&path_str)
                 .arg(&path_str)
                 .match_field(&entry.display)
@@ -130,6 +137,7 @@ fn run_code_search(query: &str, root: &str) {
                 .icon(Icon::fileicon(&path_str))
                 .quicklook(&path_str)
                 .copy_text(&relative_path)
+                .cmd_mod(&relative_path, "Paste path")
         })
         .collect();
 
@@ -171,14 +179,22 @@ fn run_repos_search(query: &str, root: &str) {
         .map(|entry| {
             let path_str = entry.path.to_string_lossy().to_string();
             let relative_path = format!("{}/{}", root, &entry.display);
-            Item::title_only(&entry.display)
+            // Condense when last two path segments are the same (e.g., "org/gitedit/gitedit" -> "org/gitedit")
+            let parts: Vec<&str> = entry.display.rsplitn(2, '/').collect();
+            let display = if parts.len() == 2 && parts[0] == parts[1].rsplit('/').next().unwrap_or("") {
+                entry.display.rsplit_once('/').map(|(prefix, _)| prefix.to_string()).unwrap_or_else(|| entry.display.clone())
+            } else {
+                entry.display.clone()
+            };
+            Item::title_only(&display)
                 .uid(&path_str)
                 .arg(&path_str)  // Full path for opening
-                .match_field(&entry.display)
+                .match_field(&entry.display)  // Keep full path for matching
                 .autocomplete(&entry.display)
                 .icon(Icon::fileicon(&path_str))
                 .quicklook(&path_str)
                 .copy_text(&relative_path)  // Relative path for copy
+                .cmd_mod(&relative_path, "Paste path")
         })
         .collect();
 
