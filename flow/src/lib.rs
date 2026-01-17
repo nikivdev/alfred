@@ -523,9 +523,9 @@ pub fn discover_repos(root: &Path) -> Vec<CodeEntry> {
                     .to_string();
                 let key = path.to_string_lossy().to_string();
                 if seen.insert(key) {
-                    repos.push(CodeEntry { display, path });
+                    repos.push(CodeEntry { display, path: path.clone() });
                 }
-                continue;
+                // Continue searching for nested repos
             }
 
             stack.push(path);

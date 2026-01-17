@@ -56,6 +56,16 @@
 				<key>vitoclose</key>
 				<false/>
 			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>SESSIONS-SCRIPT-FILTER-UID</string>
+				<key>modifiers</key>
+				<integer>524288</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
 		</array>
 		<key>DEBCD6DE-5BEB-4EB8-8EBB-7929AEDC5A35</key>
 		<array>
@@ -110,6 +120,16 @@
 		<array>
 			<dict>
 				<key>destinationuid</key>
+				<string>PASTE-PATH-CLIPBOARD-UID</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
 				<string>REPOS-OPEN-FILE-UID</string>
 				<key>modifiers</key>
 				<integer>0</integer>
@@ -120,9 +140,22 @@
 			</dict>
 			<dict>
 				<key>destinationuid</key>
-				<string>PASTE-PATH-CLIPBOARD-UID</string>
+				<string>SESSIONS-SCRIPT-FILTER-UID</string>
 				<key>modifiers</key>
-				<integer>1048576</integer>
+				<integer>524288</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>SESSIONS-SCRIPT-FILTER-UID</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>SESSIONS-COPY-CONTENT-UID</string>
+				<key>modifiers</key>
+				<integer>0</integer>
 				<key>modifiersubtext</key>
 				<string></string>
 				<key>vitoclose</key>
@@ -234,25 +267,6 @@ code_root="${code_root:-~/code}"
 		<dict>
 			<key>config</key>
 			<dict>
-				<key>autopaste</key>
-				<true/>
-				<key>clipboardtext</key>
-				<string>{query}</string>
-				<key>ignoredynamicplaceholders</key>
-				<false/>
-				<key>transient</key>
-				<false/>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.output.clipboard</string>
-			<key>uid</key>
-			<string>PASTE-PATH-CLIPBOARD-UID</string>
-			<key>version</key>
-			<integer>3</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
 				<key>availableviaurlhandler</key>
 				<false/>
 				<key>triggerid</key>
@@ -288,6 +302,101 @@ code_root="${code_root:-~/code}"
 			<string>J1K2L3M4-N5O6-4P7Q-8R9S-0T1U2V3W4X5Y</string>
 			<key>version</key>
 			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>autopaste</key>
+				<true/>
+				<key>clipboardtext</key>
+				<string>{query} </string>
+				<key>ignoredynamicplaceholders</key>
+				<false/>
+				<key>transient</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.clipboard</string>
+			<key>uid</key>
+			<string>PASTE-PATH-CLIPBOARD-UID</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<true/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>2</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<false/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string></string>
+				<key>queuedelaycustom</key>
+				<integer>1</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>Loading sessions...</string>
+				<key>script</key>
+				<string>"$HOME/.cargo/bin/flow-alfred" sessions "" --path "{query}"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>AI sessions for this project</string>
+				<key>title</key>
+				<string>Sessions</string>
+				<key>type</key>
+				<integer>0</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>SESSIONS-SCRIPT-FILTER-UID</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>#!/bin/bash
+# Parse session_id|path from arg
+IFS='|' read -r session_id project_path &lt;&lt;&lt; "$1"
+"$HOME/.cargo/bin/flow-alfred" session-content --id "$session_id" --path "$project_path" | pbcopy
+echo "Copied session to clipboard"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>SESSIONS-COPY-CONTENT-UID</string>
+			<key>version</key>
+			<integer>2</integer>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -549,6 +658,13 @@ code_root="${code_root:-~/code}"
 			<key>ypos</key>
 			<real>145</real>
 		</dict>
+		<key>PASTE-PATH-CLIPBOARD-UID</key>
+		<dict>
+			<key>xpos</key>
+			<real>755</real>
+			<key>ypos</key>
+			<real>195</real>
+		</dict>
 		<key>REPOS-EXT-TRIGGER-UID</key>
 		<dict>
 			<key>xpos</key>
@@ -570,12 +686,19 @@ code_root="${code_root:-~/code}"
 			<key>ypos</key>
 			<real>270</real>
 		</dict>
-		<key>PASTE-PATH-CLIPBOARD-UID</key>
+		<key>SESSIONS-SCRIPT-FILTER-UID</key>
+		<dict>
+			<key>xpos</key>
+			<real>555</real>
+			<key>ypos</key>
+			<real>0</real>
+		</dict>
+		<key>SESSIONS-COPY-CONTENT-UID</key>
 		<dict>
 			<key>xpos</key>
 			<real>755</real>
 			<key>ypos</key>
-			<real>195</real>
+			<real>0</real>
 		</dict>
 	</dict>
 	<key>userconfigurationconfig</key>
