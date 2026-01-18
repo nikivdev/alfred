@@ -39,3 +39,5 @@ flow/Cargo.lock
 
 # Binary in workflow dir
 flow/Flow.alfredworkflow/flow-alfred
+
+.ai/todos/*.bike

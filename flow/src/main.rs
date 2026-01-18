@@ -563,109 +563,149 @@ fn run_session_content(session_id: &str, project_path: &str) {
 
 fn run_windows(query: &str) {
     use std::process::Command;
+    use std::time::{SystemTime, Duration};
+    use std::fs;
+    use std::path::PathBuf;
 
-    // JXA script to get windows of frontmost app - much faster than AppleScript
-    let jxa_script = r#"
-ObjC.import('Cocoa');
-const app = Application.currentApplication();
-app.includeStandardAdditions = true;
+    // Cache directory for Alfred workflow
+    let cache_dir = dirs::home_dir()
+        .map(|h| h.join("Library/Caches/com.runningwithcrayons.Alfred/Workflow Data/nikiv.dev.flow"))
+        .unwrap_or_else(|| PathBuf::from("/tmp"));
 
-const frontApp = Application('System Events').processes.whose({frontmost: true})[0];
-const appName = frontApp.name();
-const windows = frontApp.windows();
+    let cache_file = cache_dir.join("windows.json");
+    let _ = fs::create_dir_all(&cache_dir);
 
-const items = [];
-for (let i = 0; i < windows.length; i++) {
-    try {
-        const win = windows[i];
-        const title = win.name();
-        if (title && title.length > 0) {
-            items.push({
-                title: title,
-                subtitle: appName,
-                arg: JSON.stringify({app: appName, window: i, title: title}),
-                match: title,
-                icon: {type: "fileicon", path: frontApp.applicationFile().posixPath()}
-            });
-        }
-    } catch(e) {}
-}
+    // Find Swift helper - check multiple locations
+    let swift_helper = {
+        let locations = [
+            // Installed in workflow directory
+            std::env::var("alfred_workflow_dir")
+                .map(|d| PathBuf::from(d).join("bin/flow-windows"))
+                .ok(),
+            // Development location
+            Some(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("bin/flow-windows")),
+            // Fallback
+            dirs::home_dir().map(|h| h.join(".cargo/bin/flow-windows")),
+        ];
+        locations.into_iter().flatten().find(|p| p.exists())
+    };
 
-if (items.length === 0) {
-    items.push({
-        title: "No windows found",
-        subtitle: appName,
-        valid: false
-    });
-}
+    // Check cache age (valid for 2 seconds)
+    let cache_age = cache_file.metadata()
+        .ok()
+        .and_then(|m| m.modified().ok())
+        .and_then(|t| SystemTime::now().duration_since(t).ok())
+        .unwrap_or(Duration::from_secs(999));
 
-JSON.stringify({items: items});
-"#;
+    let cache_valid = cache_age < Duration::from_secs(2);
+    let cached_data = fs::read_to_string(&cache_file).ok();
 
-    let output = Command::new("osascript")
-        .args(["-l", "JavaScript", "-e", jxa_script])
-        .output();
-
-    match output {
-        Ok(out) => {
-            let json_str = String::from_utf8_lossy(&out.stdout);
+    // If we have valid cache, return it immediately
+    if cache_valid {
+        if let Some(data) = &cached_data {
+            let mut json: serde_json::Value = serde_json::from_str(data).unwrap_or_default();
             // Filter by query if provided
-            if query.is_empty() {
-                print!("{}", json_str);
-            } else {
-                if let Ok(mut json) = serde_json::from_str::<serde_json::Value>(&json_str) {
-                    if let Some(items) = json.get_mut("items").and_then(|i| i.as_array_mut()) {
-                        let query_lower = query.to_lowercase();
-                        items.retain(|item| {
-                            item.get("title")
-                                .and_then(|t| t.as_str())
-                                .map(|t| t.to_lowercase().contains(&query_lower))
-                                .unwrap_or(true)
-                        });
-                    }
-                    print!("{}", serde_json::to_string(&json).unwrap_or_default());
-                } else {
-                    print!("{}", json_str);
+            if !query.is_empty() {
+                if let Some(items) = json.get_mut("items").and_then(|i| i.as_array_mut()) {
+                    let query_lower = query.to_lowercase();
+                    items.retain(|item| {
+                        item.get("title")
+                            .and_then(|t| t.as_str())
+                            .map(|t| t.to_lowercase().contains(&query_lower))
+                            .unwrap_or(true)
+                    });
                 }
             }
-        }
-        Err(_) => {
-            Output::new(vec![Item::new("Failed to get windows", "Error running script")
-                .valid(false)])
-                .print();
+            print!("{}", serde_json::to_string(&json).unwrap_or_default());
+            return;
         }
     }
+
+    // If cache is stale but exists, return it with rerun flag
+    let should_rerun = cached_data.is_some() && !cache_valid;
+
+    // Get fresh data from Swift helper
+    let fresh_data = if let Some(helper) = swift_helper {
+        Command::new(&helper)
+            .output()
+            .ok()
+            .map(|o| String::from_utf8_lossy(&o.stdout).to_string())
+    } else {
+        // Fallback to JXA if Swift helper not found
+        let jxa = r#"ObjC.import('Cocoa');const f=Application('System Events').processes.whose({frontmost:true})[0];const n=f.name();const w=f.windows();const i=[];for(let j=0;j<w.length;j++){try{const t=w[j].name();if(t&&t.length>0)i.push({title:t,subtitle:n,arg:JSON.stringify({app:n,window:j,title:t}),match:t,icon:{type:'fileicon',path:f.applicationFile().posixPath()}});}catch(e){}}if(i.length===0)i.push({title:'No windows',subtitle:n,valid:false});JSON.stringify({items:i});"#;
+        Command::new("osascript")
+            .args(["-l", "JavaScript", "-e", jxa])
+            .output()
+            .ok()
+            .map(|o| String::from_utf8_lossy(&o.stdout).to_string())
+    };
+
+    // Update cache with fresh data
+    if let Some(ref data) = fresh_data {
+        let _ = fs::write(&cache_file, data);
+    }
+
+    // Use fresh data if available, otherwise cached
+    let output_data = fresh_data.or(cached_data).unwrap_or_else(|| {
+        r#"{"items":[{"title":"Error","subtitle":"Could not get windows","valid":false}]}"#.to_string()
+    });
+
+    // Parse and filter
+    let mut json: serde_json::Value = serde_json::from_str(&output_data).unwrap_or_default();
+
+    // Add rerun flag if we returned stale cache
+    if should_rerun {
+        if let Some(obj) = json.as_object_mut() {
+            obj.insert("rerun".to_string(), serde_json::json!(0.1));
+        }
+    }
+
+    // Filter by query
+    if !query.is_empty() {
+        if let Some(items) = json.get_mut("items").and_then(|i| i.as_array_mut()) {
+            let query_lower = query.to_lowercase();
+            items.retain(|item| {
+                item.get("title")
+                    .and_then(|t| t.as_str())
+                    .map(|t| t.to_lowercase().contains(&query_lower))
+                    .unwrap_or(true)
+            });
+        }
+    }
+
+    print!("{}", serde_json::to_string(&json).unwrap_or_default());
 }
 
 fn run_raise_window(arg: &str) {
     use std::process::Command;
 
-    // Parse the JSON arg
-    let parsed: Result<serde_json::Value, _> = serde_json::from_str(arg);
-    let (app_name, window_index) = match parsed {
-        Ok(json) => {
-            let app = json.get("app").and_then(|a| a.as_str()).unwrap_or("");
-            let idx = json.get("window").and_then(|w| w.as_i64()).unwrap_or(0);
-            (app.to_string(), idx)
-        }
-        Err(_) => {
-            eprintln!("Invalid argument");
-            return;
-        }
+    // Find Swift helper - check multiple locations
+    let swift_helper = {
+        let locations = [
+            std::env::var("alfred_workflow_dir")
+                .map(|d| PathBuf::from(d).join("bin/flow-raise-window"))
+                .ok(),
+            Some(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("bin/flow-raise-window")),
+            dirs::home_dir().map(|h| h.join(".cargo/bin/flow-raise-window")),
+        ];
+        locations.into_iter().flatten().find(|p| p.exists())
     };
 
-    // JXA to raise window
-    let jxa_script = format!(r#"
-const se = Application('System Events');
-const proc = se.processes.byName('{}');
-proc.frontmost = true;
-const win = proc.windows[{}];
-if (win) {{
-    try {{ win.actions.byName('AXRaise').perform(); }} catch(e) {{}}
-}}
-"#, app_name, window_index);
+    if let Some(helper) = swift_helper {
+        let _ = Command::new(&helper).arg(arg).output();
+    } else {
+        // Fallback to JXA
+        let parsed: Result<serde_json::Value, _> = serde_json::from_str(arg);
+        let (app_name, window_index) = match parsed {
+            Ok(json) => {
+                let app = json.get("app").and_then(|a| a.as_str()).unwrap_or("");
+                let idx = json.get("window").and_then(|w| w.as_i64()).unwrap_or(0);
+                (app.to_string(), idx)
+            }
+            Err(_) => return,
+        };
 
-    let _ = Command::new("osascript")
-        .args(["-l", "JavaScript", "-e", &jxa_script])
-        .output();
+        let jxa = format!(r#"const se=Application('System Events');const p=se.processes.byName('{}');p.frontmost=true;const w=p.windows[{}];if(w)try{{w.actions.byName('AXRaise').perform();}}catch(e){{}}"#, app_name, window_index);
+        let _ = Command::new("osascript").args(["-l", "JavaScript", "-e", &jxa]).output();
+    }
 }
