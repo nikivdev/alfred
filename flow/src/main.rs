@@ -108,6 +108,19 @@ enum Commands {
         #[arg(long)]
         path: String,
     },
+
+    /// List windows of frontmost app (Alfred JSON output)
+    Windows {
+        /// Query to filter windows
+        #[arg(default_value = "")]
+        query: String,
+    },
+
+    /// Raise a window by index
+    RaiseWindow {
+        /// JSON with app name and window index
+        arg: String,
+    },
 }
 
 fn main() {
@@ -130,6 +143,8 @@ fn main() {
         Commands::Watch { workflow_dir, bundle_id } => run_watch(&workflow_dir, &bundle_id),
         Commands::Sessions { query, path } => run_sessions(&query, &path),
         Commands::SessionContent { id, path } => run_session_content(&id, &path),
+        Commands::Windows { query } => run_windows(&query),
+        Commands::RaiseWindow { arg } => run_raise_window(&arg),
     }
 }
 
@@ -544,4 +559,113 @@ fn run_session_content(session_id: &str, project_path: &str) {
 
     // Output the content (will be captured by Alfred for clipboard)
     print!("{}", output.trim());
+}
+
+fn run_windows(query: &str) {
+    use std::process::Command;
+
+    // JXA script to get windows of frontmost app - much faster than AppleScript
+    let jxa_script = r#"
+ObjC.import('Cocoa');
+const app = Application.currentApplication();
+app.includeStandardAdditions = true;
+
+const frontApp = Application('System Events').processes.whose({frontmost: true})[0];
+const appName = frontApp.name();
+const windows = frontApp.windows();
+
+const items = [];
+for (let i = 0; i < windows.length; i++) {
+    try {
+        const win = windows[i];
+        const title = win.name();
+        if (title && title.length > 0) {
+            items.push({
+                title: title,
+                subtitle: appName,
+                arg: JSON.stringify({app: appName, window: i, title: title}),
+                match: title,
+                icon: {type: "fileicon", path: frontApp.applicationFile().posixPath()}
+            });
+        }
+    } catch(e) {}
+}
+
+if (items.length === 0) {
+    items.push({
+        title: "No windows found",
+        subtitle: appName,
+        valid: false
+    });
+}
+
+JSON.stringify({items: items});
+"#;
+
+    let output = Command::new("osascript")
+        .args(["-l", "JavaScript", "-e", jxa_script])
+        .output();
+
+    match output {
+        Ok(out) => {
+            let json_str = String::from_utf8_lossy(&out.stdout);
+            // Filter by query if provided
+            if query.is_empty() {
+                print!("{}", json_str);
+            } else {
+                if let Ok(mut json) = serde_json::from_str::<serde_json::Value>(&json_str) {
+                    if let Some(items) = json.get_mut("items").and_then(|i| i.as_array_mut()) {
+                        let query_lower = query.to_lowercase();
+                        items.retain(|item| {
+                            item.get("title")
+                                .and_then(|t| t.as_str())
+                                .map(|t| t.to_lowercase().contains(&query_lower))
+                                .unwrap_or(true)
+                        });
+                    }
+                    print!("{}", serde_json::to_string(&json).unwrap_or_default());
+                } else {
+                    print!("{}", json_str);
+                }
+            }
+        }
+        Err(_) => {
+            Output::new(vec![Item::new("Failed to get windows", "Error running script")
+                .valid(false)])
+                .print();
+        }
+    }
+}
+
+fn run_raise_window(arg: &str) {
+    use std::process::Command;
+
+    // Parse the JSON arg
+    let parsed: Result<serde_json::Value, _> = serde_json::from_str(arg);
+    let (app_name, window_index) = match parsed {
+        Ok(json) => {
+            let app = json.get("app").and_then(|a| a.as_str()).unwrap_or("");
+            let idx = json.get("window").and_then(|w| w.as_i64()).unwrap_or(0);
+            (app.to_string(), idx)
+        }
+        Err(_) => {
+            eprintln!("Invalid argument");
+            return;
+        }
+    };
+
+    // JXA to raise window
+    let jxa_script = format!(r#"
+const se = Application('System Events');
+const proc = se.processes.byName('{}');
+proc.frontmost = true;
+const win = proc.windows[{}];
+if (win) {{
+    try {{ win.actions.byName('AXRaise').perform(); }} catch(e) {{}}
+}}
+"#, app_name, window_index);
+
+    let _ = Command::new("osascript")
+        .args(["-l", "JavaScript", "-e", &jxa_script])
+        .output();
 }
