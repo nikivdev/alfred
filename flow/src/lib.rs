@@ -13,11 +13,69 @@
 //! Output::new(items).print();
 //! ```
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+
+/// Configuration for flow-alfred
+#[derive(Debug, Default, Deserialize)]
+pub struct Config {
+    /// Paths to exclude from search (supports glob patterns)
+    #[serde(default)]
+    pub exclude: Vec<String>,
+}
+
+impl Config {
+    /// Load config from ~/.config/flow-alfred/config.toml
+    pub fn load() -> Self {
+        let config_path = dirs::home_dir()
+            .map(|h| h.join(".config/flow-alfred/config.toml"))
+            .unwrap_or_default();
+
+        if config_path.exists() {
+            if let Ok(content) = fs::read_to_string(&config_path) {
+                if let Ok(config) = toml::from_str(&content) {
+                    return config;
+                }
+            }
+        }
+        Config::default()
+    }
+
+    /// Check if a path should be excluded
+    pub fn should_exclude(&self, path: &Path) -> bool {
+        let path_str = path.to_string_lossy();
+        for pattern in &self.exclude {
+            // Expand ~ in pattern
+            let expanded = if pattern.starts_with("~/") {
+                dirs::home_dir()
+                    .map(|h| h.join(&pattern[2..]).to_string_lossy().to_string())
+                    .unwrap_or_else(|| pattern.clone())
+            } else {
+                pattern.clone()
+            };
+
+            // Check exact match or prefix match
+            if path_str == expanded || path_str.starts_with(&format!("{}/", expanded)) {
+                return true;
+            }
+
+            // Check glob pattern (simple * matching)
+            if expanded.contains('*') {
+                let parts: Vec<&str> = expanded.split('*').collect();
+                if parts.len() == 2 {
+                    let (prefix, suffix) = (parts[0], parts[1]);
+                    if path_str.starts_with(prefix) && path_str.ends_with(suffix) {
+                        return true;
+                    }
+                }
+            }
+        }
+        false
+    }
+}
 
 /// Alfred JSON output wrapper
 #[derive(Debug, Serialize)]
@@ -489,11 +547,21 @@ pub struct CodeEntry {
 
 /// Discover git repositories under a root directory
 pub fn discover_repos(root: &Path) -> Vec<CodeEntry> {
+    discover_repos_with_config(root, &Config::load())
+}
+
+/// Discover git repositories with custom config
+pub fn discover_repos_with_config(root: &Path, config: &Config) -> Vec<CodeEntry> {
     let mut repos = Vec::new();
     let mut seen = HashSet::new();
     let mut stack = vec![root.to_path_buf()];
 
     while let Some(dir) = stack.pop() {
+        // Check if this directory should be excluded
+        if config.should_exclude(&dir) {
+            continue;
+        }
+
         let entries = match fs::read_dir(&dir) {
             Ok(entries) => entries,
             Err(_) => continue,
@@ -511,6 +579,11 @@ pub fn discover_repos(root: &Path) -> Vec<CodeEntry> {
 
             let name = entry.file_name().to_string_lossy().to_string();
             if should_skip_dir(&name) {
+                continue;
+            }
+
+            // Check if this path should be excluded
+            if config.should_exclude(&path) {
                 continue;
             }
 
@@ -538,6 +611,11 @@ pub fn discover_repos(root: &Path) -> Vec<CodeEntry> {
 
 /// Discover git repositories in owner/repo structure (like ~/repos)
 pub fn discover_repos_structured(root: &Path) -> Vec<CodeEntry> {
+    discover_repos_structured_with_config(root, &Config::load())
+}
+
+/// Discover git repositories in owner/repo structure with custom config
+pub fn discover_repos_structured_with_config(root: &Path, config: &Config) -> Vec<CodeEntry> {
     let mut repos = Vec::new();
 
     // Read owner directories
@@ -562,6 +640,11 @@ pub fn discover_repos_structured(root: &Path) -> Vec<CodeEntry> {
             continue;
         }
 
+        // Check if owner path should be excluded
+        if config.should_exclude(&owner_path) {
+            continue;
+        }
+
         // Read repo directories under each owner
         let repo_entries = match fs::read_dir(&owner_path) {
             Ok(entries) => entries,
@@ -581,6 +664,11 @@ pub fn discover_repos_structured(root: &Path) -> Vec<CodeEntry> {
 
             // Skip hidden directories
             if repo_name.starts_with('.') {
+                continue;
+            }
+
+            // Check if repo path should be excluded
+            if config.should_exclude(&repo_path) {
                 continue;
             }
 

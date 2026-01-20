@@ -1,0 +1,18 @@
+version = 1
+
+[[tasks]]
+name = "setup"
+command = "cd flow && cargo build --locked"
+description = "Install tools and dependencies"
+shortcuts = ["s"]
+dependencies = ["cargo"]
+
+[[tasks]]
+name = "dev"
+command = "cd flow && cargo run"
+description = "Run development server"
+dependencies = ["setup"]
+shortcuts = ["d"]
+
+[deps]
+cargo = "cargo"

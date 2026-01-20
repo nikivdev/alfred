@@ -1,11 +1,13 @@
 # [Alfred](https://www.alfredapp.com) workflows
 
-Currently making workflow for [flow](https://github.com/nikivdev/flow) amongst other things in future.
+## Dev 
+
+With [flow](https://github.com/nikivdev/flow), run `f setup`, then `f` will search through list of tasks.
+
+Currently making workflow for [flow](https://github.com/nikivdev/flow) which can be found [here](flow).
 
 ## Contributing
 
-Make issues with bugs/features or submit PRs. [flow](https://github.com/nikivdev/flow) has many utils to make this easy. PRs with ideas if they are great will eventually be merged. Bug fixing is always welcome, perf improvements should ideally have some benchmark attached. Docs can always be better. See [this](https://nikiv.dev/how-i-code) for how to code fast with AI.
-
-### 🖤
+[Use AI](https://nikiv.dev/how-i-code) & [flow](https://github.com/nikivdev/flow). All meaningful issues and PRs will be merged in. Thank you.
 
 [![Discord](https://go.nikiv.dev/badge-discord)](https://go.nikiv.dev/discord) [![X](https://go.nikiv.dev/badge-x)](https://x.com/nikivdev) [![nikiv.dev](https://go.nikiv.dev/badge-nikiv)](https://nikiv.dev)

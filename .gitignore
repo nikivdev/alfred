@@ -41,3 +41,12 @@ flow/Cargo.lock
 flow/Flow.alfredworkflow/flow-alfred
 
 .ai/todos/*.bike
+
+# flow
+.ai/internal/
+.ai/web/
+.claude/
+.codex/
+.flox/
+
+.ai/review-log.jsonl
