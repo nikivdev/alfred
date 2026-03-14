@@ -1,0 +1,14 @@
+#!/bin/bash
+set -euo pipefail
+
+if [ -x "$HOME/.cargo/bin/flow-alfred" ]; then
+  printf '%s\n' "$HOME/.cargo/bin/flow-alfred"
+  exit 0
+fi
+
+if command -v flow-alfred >/dev/null 2>/dev/null; then
+  command -v flow-alfred
+  exit 0
+fi
+
+exit 127

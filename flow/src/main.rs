@@ -582,10 +582,10 @@ fn run_windows(query: &str) {
             std::env::var("alfred_workflow_dir")
                 .map(|d| PathBuf::from(d).join("bin/flow-windows"))
                 .ok(),
+            // Installed helper alongside the cargo-installed binary
+            dirs::home_dir().map(|h| h.join(".cargo/bin/flow-windows")),
             // Development location
             Some(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("bin/flow-windows")),
-            // Fallback
-            dirs::home_dir().map(|h| h.join(".cargo/bin/flow-windows")),
         ];
         locations.into_iter().flatten().find(|p| p.exists())
     };
@@ -685,8 +685,8 @@ fn run_raise_window(arg: &str) {
             std::env::var("alfred_workflow_dir")
                 .map(|d| PathBuf::from(d).join("bin/flow-raise-window"))
                 .ok(),
-            Some(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("bin/flow-raise-window")),
             dirs::home_dir().map(|h| h.join(".cargo/bin/flow-raise-window")),
+            Some(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("bin/flow-raise-window")),
         ];
         locations.into_iter().flatten().find(|p| p.exists())
     };

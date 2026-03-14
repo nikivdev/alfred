@@ -1,0 +1,10 @@
+#!/bin/bash
+set -euo pipefail
+
+path="${1:?missing path}"
+
+if [ -n "${editor_app:-}" ]; then
+  exec open -a "$editor_app" "$path"
+fi
+
+exec open "$path"

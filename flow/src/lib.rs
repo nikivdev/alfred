@@ -425,13 +425,32 @@ pub fn reload_workflow(bundle_id: &str) -> Result<(), String> {
 
 /// Pack a workflow directory into .alfredworkflow file
 pub fn pack_workflow(workflow_dir: &Path, output_path: &Path) -> Result<(), String> {
-    Command::new("zip")
+    let resolved_output = if output_path.is_absolute() {
+        output_path.to_path_buf()
+    } else {
+        std::env::current_dir()
+            .map_err(|e| format!("Failed to get current directory: {}", e))?
+            .join(output_path)
+    };
+
+    let output = Command::new("zip")
         .arg("-r")
-        .arg(output_path)
+        .arg(&resolved_output)
         .arg(".")
         .current_dir(workflow_dir)
         .output()
         .map_err(|e| format!("Failed to create workflow package: {}", e))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let message = stderr.trim();
+        return Err(if message.is_empty() {
+            "zip exited with a non-zero status".to_string()
+        } else {
+            format!("zip failed: {}", message)
+        });
+    }
+
     Ok(())
 }
 

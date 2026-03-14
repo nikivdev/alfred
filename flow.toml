@@ -2,17 +2,19 @@ version = 1
 
 [[tasks]]
 name = "setup"
-command = "cd flow && cargo build --locked"
-description = "Install tools and dependencies"
+command = "cd flow && ./install.sh"
+description = "Build and install the Alfred workflow binaries"
 shortcuts = ["s"]
-dependencies = ["cargo"]
+dependencies = ["cargo", "swift"]
+interactive = true
 
 [[tasks]]
 name = "dev"
-command = "cd flow && cargo run"
-description = "Run development server"
-dependencies = ["setup"]
+command = "cd flow && cargo run -- --help"
+description = "Run the CLI entrypoint in development"
+dependencies = ["cargo"]
 shortcuts = ["d"]
 
 [deps]
 cargo = "cargo"
+swift = "swiftc"

@@ -1,0 +1,21 @@
+#!/bin/bash
+set -euo pipefail
+
+mode="${1:?missing mode}"
+shift
+
+if [ -n "${frs_bin:-}" ] && [ -x "${frs_bin}" ]; then
+  exec "${frs_bin}" write-doc "${mode}" "$@"
+fi
+
+if [ -x "$HOME/bin/frs" ]; then
+  exec "$HOME/bin/frs" write-doc "${mode}" "$@"
+fi
+
+if command -v frs >/dev/null 2>/dev/null; then
+  exec "$(command -v frs)" write-doc "${mode}" "$@"
+fi
+
+osascript -e 'display notification "Install frs or set the frs_bin workflow variable" with title "Flow"' >/dev/null 2>/dev/null || true
+printf '%s\n' 'frs not found. Set the frs_bin workflow variable or install frs.' >&2
+exit 127

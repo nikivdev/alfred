@@ -1,10 +1,29 @@
 # [Alfred](https://www.alfredapp.com) workflows
 
-## Dev 
+## Flow Workflow
 
-With [flow](https://github.com/nikivdev/flow), run `f setup`, then `f` will search through list of tasks.
+This repo currently ships a Flow-focused Alfred workflow in [flow](flow).
 
-Currently making workflow for [flow](https://github.com/nikivdev/flow) which can be found [here](flow).
+For a fresh Mac:
+
+```bash
+cd flow
+./install.sh
+~/.cargo/bin/flow-alfred link
+```
+
+That installs the Rust CLI, rebuilds the Swift window-switcher helpers for the local Mac architecture, and links the workflow into Alfred.
+
+Workflow variables:
+
+- `code_root` defaults to `~/code`
+- `repos_root` defaults to `~/repos`
+- `editor_app` is optional; if unset, Alfred uses `open`
+- `frs_bin` is optional and only affects the text-to-docs external trigger
+
+Alfred still needs the normal manual bits: Powerpack enabled, Alfred opened at least once, and Accessibility granted if you want the `win` window switcher.
+
+Full setup notes for another machine are in [docs/flow-extension-new-mac.md](docs/flow-extension-new-mac.md).
 
 ## Contributing
 

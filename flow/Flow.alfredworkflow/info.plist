@@ -221,9 +221,15 @@
 				<integer>102</integer>
 				<key>script</key>
 				<string>#!/bin/bash
-# Parse session_id|path from arg
-IFS='|' read -r session_id project_path &lt;&lt;&lt; "$1"
-"$HOME/.cargo/bin/flow-alfred" session-content --id "$session_id" --path "$project_path" | pbcopy
+session_id="${1%%|*}"
+project_path="${1#*|}"
+
+if ! flow_bin="$("$alfred_workflow_dir/bin/find-flow-alfred")"; then
+  osascript -e 'display notification "Install flow-alfred with cargo install --path ./flow --force" with title "Flow"' >/dev/null 2>/dev/null || true
+  exit 1
+fi
+
+"$flow_bin" session-content --id "$session_id" --path "$project_path" | pbcopy
 echo "Copied session to clipboard"</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
@@ -267,7 +273,13 @@ echo "Copied session to clipboard"</string>
 				<key>runningsubtext</key>
 				<string>Loading sessions...</string>
 				<key>script</key>
-				<string>"$HOME/.cargo/bin/flow-alfred" sessions "" --path "{query}"</string>
+				<string>#!/bin/bash
+if ! flow_bin="$("$alfred_workflow_dir/bin/find-flow-alfred")"; then
+  echo '{"items":[{"title":"flow-alfred not found","subtitle":"Run: cargo install --path /path/to/alfred/flow --force","valid":false}]}'
+  exit 0
+fi
+
+"$flow_bin" sessions "" --path "{query}"</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -317,31 +329,19 @@ echo "Copied session to clipboard"</string>
 				<string>Searching projects...</string>
 				<key>script</key>
 				<string>#!/bin/bash
-
-# Find flow-alfred binary
-flow_bin=""
-if [ -x "$HOME/.cargo/bin/flow-alfred" ]; then
-    flow_bin="$HOME/.cargo/bin/flow-alfred"
-elif [ -x "/usr/local/bin/flow-alfred" ]; then
-    flow_bin="/usr/local/bin/flow-alfred"
-elif command -v flow-alfred &amp;&gt;/dev/null; then
-    flow_bin="flow-alfred"
-else
-    echo '{"items": [{"title": "flow-alfred not found", "subtitle": "Run: cargo install --path /path/to/alfred/flow", "valid": false}]}'
+if ! flow_bin="$("$alfred_workflow_dir/bin/find-flow-alfred")"; then
+    echo '{"items":[{"title":"flow-alfred not found","subtitle":"Run: cargo install --path /path/to/alfred/flow --force","valid":false}]}'
     exit 0
 fi
 
-# Get configuration
 code_root="${code_root:-~/code}"
-
-# Execute and return JSON
 "$flow_bin" code --root "$code_root" "$1"</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
 				<string></string>
 				<key>subtext</key>
-				<string>Search git repositories in ~/code</string>
+				<string>Search git repositories in the configured code root</string>
 				<key>title</key>
 				<string>Code Search</string>
 				<key>type</key>
@@ -364,7 +364,7 @@ code_root="${code_root:-~/code}"
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>script</key>
-				<string>open -a "Zed" "$1"</string>
+				<string>"$alfred_workflow_dir/bin/open-project" "$1"</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -445,7 +445,7 @@ code_root="${code_root:-~/code}"
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>script</key>
-				<string>open -a "Zed" "$1"</string>
+				<string>"$alfred_workflow_dir/bin/open-project" "$1"</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -504,13 +504,19 @@ code_root="${code_root:-~/code}"
 				<string>Searching repos...</string>
 				<key>script</key>
 				<string>#!/bin/bash
-"$HOME/.cargo/bin/flow-alfred" repos --root ~/repos "$1"</string>
+if ! flow_bin="$("$alfred_workflow_dir/bin/find-flow-alfred")"; then
+  echo '{"items":[{"title":"flow-alfred not found","subtitle":"Run: cargo install --path /path/to/alfred/flow --force","valid":false}]}'
+  exit 0
+fi
+
+repos_root="${repos_root:-~/repos}"
+"$flow_bin" repos --root "$repos_root" "$1"</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
 				<string></string>
 				<key>subtext</key>
-				<string>Search git repositories in ~/repos</string>
+				<string>Search git repositories in the configured repos root</string>
 				<key>title</key>
 				<string>Repos Search</string>
 				<key>type</key>
@@ -576,7 +582,7 @@ code_root="${code_root:-~/code}"
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>script</key>
-				<string>/Users/nikiv/bin/frs write-doc run "$1"</string>
+				<string>"$alfred_workflow_dir/bin/frs-write-doc" run "$1"</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -614,7 +620,7 @@ code_root="${code_root:-~/code}"
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>script</key>
-				<string>/Users/nikiv/bin/frs write-doc paste "$1"</string>
+				<string>"$alfred_workflow_dir/bin/frs-write-doc" paste "$1"</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -647,36 +653,18 @@ code_root="${code_root:-~/code}"
 		<dict>
 			<key>config</key>
 			<dict>
-				<key>json</key>
-				<string>{
-  "alfredworkflow" : {
-    "arg" : "{query}",
-    "config" : {
-      "title" : "",
-      "runningsubtext" : "",
-      "subtext" : ""
-    },
-    "variables" : {
-    }
-  }
-}</string>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.utility.json</string>
-			<key>uid</key>
-			<string>WINDOWS-JSON-UID</string>
-			<key>version</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
 				<key>concurrently</key>
 				<false/>
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>script</key>
-				<string>"$HOME/.cargo/bin/flow-alfred" raise-window "$1"</string>
+				<string>#!/bin/bash
+if ! flow_bin="$("$alfred_workflow_dir/bin/find-flow-alfred")"; then
+  osascript -e 'display notification "Install flow-alfred with cargo install --path ./flow --force" with title "Flow"' >/dev/null 2>/dev/null || true
+  exit 1
+fi
+
+"$flow_bin" raise-window "$1"</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -719,7 +707,13 @@ code_root="${code_root:-~/code}"
 				<key>runningsubtext</key>
 				<string>Gathering windows...</string>
 				<key>script</key>
-				<string>"$HOME/.cargo/bin/flow-alfred" windows "$1"</string>
+				<string>#!/bin/bash
+if ! flow_bin="$("$alfred_workflow_dir/bin/find-flow-alfred")"; then
+  echo '{"items":[{"title":"flow-alfred not found","subtitle":"Run: cargo install --path /path/to/alfred/flow --force","valid":false}]}'
+  exit 0
+fi
+
+"$flow_bin" windows "$1"</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -739,6 +733,30 @@ code_root="${code_root:-~/code}"
 			<string>WINDOWS-SCRIPT-FILTER-UID</string>
 			<key>version</key>
 			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>json</key>
+				<string>{
+  "alfredworkflow" : {
+    "arg" : "{query}",
+    "config" : {
+      "title" : "",
+      "runningsubtext" : "",
+      "subtext" : ""
+    },
+    "variables" : {
+    }
+  }
+}</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.utility.json</string>
+			<key>uid</key>
+			<string>WINDOWS-JSON-UID</string>
+			<key>version</key>
+			<integer>1</integer>
 		</dict>
 	</array>
 	<key>readme</key>
@@ -902,7 +920,72 @@ code_root="${code_root:-~/code}"
 			<key>variable</key>
 			<string>code_root</string>
 		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string>~/repos</string>
+				<key>placeholder</key>
+				<string>~/repos</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Root directory to scan for owner/repo style repositories</string>
+			<key>label</key>
+			<string>Repos Root</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>repos_root</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>Zed</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Optional app name or path to use when opening projects</string>
+			<key>label</key>
+			<string>Editor App</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>editor_app</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>~/bin/frs</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Optional override for the frs binary used by text-to-docs triggers</string>
+			<key>label</key>
+			<string>frs Bin</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>frs_bin</string>
+		</dict>
 	</array>
+	<key>variablesdontexport</key>
+	<array/>
 	<key>version</key>
 	<string>0.1.0</string>
 	<key>webaddress</key>
