@@ -107,7 +107,20 @@
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>9D8DCB6B-8E82-414E-99D3-3FF55A6E2A12</string>
+				<string>REPOS-SCRIPT-FILTER-UID</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>REPOS-CODE-EXT-TRIGGER-UID</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>REPOS-CODE-SCRIPT-FILTER-UID</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -143,6 +156,75 @@
 				<string>REPOS-OPEN-FILE-UID</string>
 				<key>modifiers</key>
 				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>REPOS-CODE-SCRIPT-FILTER-UID</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>SESSIONS-SCRIPT-FILTER-UID</string>
+				<key>modifiers</key>
+				<integer>524288</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>PASTE-PATH-CLIPBOARD-UID</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>REPOS-OPEN-FILE-UID</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>RECIPES-EXT-TRIGGER-UID</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>RECIPES-SCRIPT-FILTER-UID</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>RECIPES-SCRIPT-FILTER-UID</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>RECIPES-COPY-CONTENT-UID</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>B2C3D4E5-F6A7-4B5C-9D0E-1F2A3B4C5D6E</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
 				<key>modifiersubtext</key>
 				<string></string>
 				<key>vitoclose</key>
@@ -364,7 +446,7 @@ code_root="${code_root:-~/code}"
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>script</key>
-				<string>open -a "Zed" "$1"</string>
+				<string>open -a "Zed Preview" "$1"</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -445,7 +527,7 @@ code_root="${code_root:-~/code}"
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>script</key>
-				<string>open -a "Zed" "$1"</string>
+				<string>open -a "Zed Preview" "$1"</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -463,6 +545,44 @@ code_root="${code_root:-~/code}"
 		<dict>
 			<key>config</key>
 			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>#!/bin/bash
+
+flow_bin=""
+if [ -x "$HOME/.cargo/bin/flow-alfred" ]; then
+    flow_bin="$HOME/.cargo/bin/flow-alfred"
+elif [ -x "/usr/local/bin/flow-alfred" ]; then
+    flow_bin="/usr/local/bin/flow-alfred"
+elif command -v flow-alfred &amp;&gt;/dev/null; then
+    flow_bin="flow-alfred"
+else
+    echo "flow-alfred not found"
+    exit 1
+fi
+
+"$flow_bin" recipe-content --path "$1" | pbcopy
+echo "Copied recipe to clipboard"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>RECIPES-COPY-CONTENT-UID</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
 				<key>availableviaurlhandler</key>
 				<false/>
 				<key>triggerid</key>
@@ -472,6 +592,36 @@ code_root="${code_root:-~/code}"
 			<string>alfred.workflow.trigger.external</string>
 			<key>uid</key>
 			<string>REPOS-EXT-TRIGGER-UID</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>availableviaurlhandler</key>
+				<false/>
+				<key>triggerid</key>
+				<string>repos-code</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.external</string>
+			<key>uid</key>
+			<string>REPOS-CODE-EXT-TRIGGER-UID</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>availableviaurlhandler</key>
+				<false/>
+				<key>triggerid</key>
+				<string>recipes</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.external</string>
+			<key>uid</key>
+			<string>RECIPES-EXT-TRIGGER-UID</string>
 			<key>version</key>
 			<integer>1</integer>
 		</dict>
@@ -504,7 +654,22 @@ code_root="${code_root:-~/code}"
 				<string>Searching repos...</string>
 				<key>script</key>
 				<string>#!/bin/bash
-"$HOME/.cargo/bin/flow-alfred" repos --root ~/repos "$1"</string>
+
+flow_bin=""
+if [ -x "$HOME/.cargo/bin/flow-alfred" ]; then
+    flow_bin="$HOME/.cargo/bin/flow-alfred"
+elif [ -x "/usr/local/bin/flow-alfred" ]; then
+    flow_bin="/usr/local/bin/flow-alfred"
+elif command -v flow-alfred &amp;&gt;/dev/null; then
+    flow_bin="flow-alfred"
+else
+    echo '{"items": [{"title": "flow-alfred not found", "subtitle": "Run: cargo install --path /path/to/alfred/flow", "valid": false}]}'
+    exit 0
+fi
+
+repos_root="${repos_root:-~/repos}"
+
+"$flow_bin" repos --root "$repos_root" "$1"</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -522,6 +687,137 @@ code_root="${code_root:-~/code}"
 			<string>alfred.workflow.input.scriptfilter</string>
 			<key>uid</key>
 			<string>REPOS-SCRIPT-FILTER-UID</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<true/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>2</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<false/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>repos-code</string>
+				<key>queuedelaycustom</key>
+				<integer>1</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>Searching repos and code...</string>
+				<key>script</key>
+				<string>#!/bin/bash
+
+flow_bin=""
+if [ -x "$HOME/.cargo/bin/flow-repos-code" ]; then
+    flow_bin="$HOME/.cargo/bin/flow-repos-code"
+elif [ -x "/usr/local/bin/flow-repos-code" ]; then
+    flow_bin="/usr/local/bin/flow-repos-code"
+elif command -v flow-repos-code &amp;&gt;/dev/null; then
+    flow_bin="flow-repos-code"
+else
+    echo '{"items": [{"title": "flow-repos-code not found", "subtitle": "Run: cargo install --path /path/to/alfred/flow --locked --force", "valid": false}]}'
+    exit 0
+fi
+
+repos_root="${repos_root:-$HOME/repos}"
+code_root="${code_root:-$HOME/code}"
+export repos_root code_root
+
+exec "$flow_bin" "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>Search git repositories in ~/repos and ~/code</string>
+				<key>title</key>
+				<string>Repos + Code Search</string>
+				<key>type</key>
+				<integer>4</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>REPOS-CODE-SCRIPT-FILTER-UID</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<true/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>2</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<false/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>recipe</string>
+				<key>queuedelaycustom</key>
+				<integer>1</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>Searching recipes...</string>
+				<key>script</key>
+				<string>#!/bin/bash
+
+flow_bin=""
+if [ -x "$HOME/.cargo/bin/flow-alfred" ]; then
+    flow_bin="$HOME/.cargo/bin/flow-alfred"
+elif [ -x "/usr/local/bin/flow-alfred" ]; then
+    flow_bin="/usr/local/bin/flow-alfred"
+elif command -v flow-alfred &amp;&gt;/dev/null; then
+    flow_bin="flow-alfred"
+else
+    echo '{"items": [{"title": "flow-alfred not found", "subtitle": "Run: cargo install --path /path/to/alfred/flow", "valid": false}]}'
+    exit 0
+fi
+
+recipes_root="${recipes_root:-~/docs/codex/recipes}"
+"$flow_bin" recipes --root "$recipes_root" "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>Search Codex recipe notes and copy the paste-ready block</string>
+				<key>title</key>
+				<string>Recipe Search</string>
+				<key>type</key>
+				<integer>4</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>RECIPES-SCRIPT-FILTER-UID</string>
 			<key>version</key>
 			<integer>3</integer>
 		</dict>
@@ -822,12 +1118,26 @@ code_root="${code_root:-~/code}"
 			<key>ypos</key>
 			<real>270</real>
 		</dict>
+		<key>REPOS-CODE-EXT-TRIGGER-UID</key>
+		<dict>
+			<key>xpos</key>
+			<real>100</real>
+			<key>ypos</key>
+			<real>380</real>
+		</dict>
 		<key>REPOS-OPEN-FILE-UID</key>
 		<dict>
 			<key>xpos</key>
 			<real>555</real>
 			<key>ypos</key>
 			<real>270</real>
+		</dict>
+		<key>REPOS-CODE-SCRIPT-FILTER-UID</key>
+		<dict>
+			<key>xpos</key>
+			<real>355</real>
+			<key>ypos</key>
+			<real>380</real>
 		</dict>
 		<key>REPOS-SCRIPT-FILTER-UID</key>
 		<dict>
@@ -901,6 +1211,27 @@ code_root="${code_root:-~/code}"
 			<string>textfield</string>
 			<key>variable</key>
 			<string>code_root</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string>~/repos</string>
+				<key>placeholder</key>
+				<string>~/repos</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Root directory to scan for owner/repo git repositories</string>
+			<key>label</key>
+			<string>Repos Root</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>repos_root</string>
 		</dict>
 	</array>
 	<key>version</key>

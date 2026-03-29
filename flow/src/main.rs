@@ -1,7 +1,12 @@
+use std::collections::HashSet;
 use std::path::PathBuf;
+use std::thread;
 
 use clap::{Parser, Subcommand};
-use flow_alfred::{discover_repos, discover_repos_structured, expand_path, fuzzy_match, fuzzy_sort, reload_workflow, Icon, Item, Output};
+use flow_alfred::{
+    discover_repos_cached, discover_repos_structured_cached, expand_path, fuzzy_match, fuzzy_score,
+    reload_workflow, CodeEntry, Icon, Item, Output,
+};
 
 #[derive(Parser)]
 #[command(name = "flow-alfred")]
@@ -33,6 +38,39 @@ enum Commands {
         /// Root directory to scan
         #[arg(long, default_value = "~/repos")]
         root: String,
+    },
+
+    /// Search git repositories under ~/repos and ~/code together
+    ReposCode {
+        /// Search query
+        #[arg(default_value = "")]
+        query: String,
+
+        /// Root directory to scan for structured repos
+        #[arg(long, default_value = "~/repos")]
+        repos_root: String,
+
+        /// Root directory to scan for code repos
+        #[arg(long, default_value = "~/code")]
+        code_root: String,
+    },
+
+    /// Search Codex recipe notes and copy the paste-ready payload
+    Recipes {
+        /// Search query
+        #[arg(default_value = "")]
+        query: String,
+
+        /// Root directory to scan
+        #[arg(long, default_value = "~/docs/codex/recipes")]
+        root: String,
+    },
+
+    /// Get recipe clipboard content from a markdown file
+    RecipeContent {
+        /// Recipe markdown file path
+        #[arg(long)]
+        path: String,
     },
 
     /// Link workflow to Alfred (for development)
@@ -129,6 +167,13 @@ fn main() {
     match cli.command {
         Commands::Code { query, root } => run_code_search(&query, &root),
         Commands::Repos { query, root } => run_repos_search(&query, &root),
+        Commands::ReposCode {
+            query,
+            repos_root,
+            code_root,
+        } => run_repos_code_search(&query, &repos_root, &code_root),
+        Commands::Recipes { query, root } => run_recipe_search(&query, &root),
+        Commands::RecipeContent { path } => run_recipe_content(&path),
         Commands::Link {
             workflow_dir,
             bundle_id,
@@ -140,7 +185,10 @@ fn main() {
         } => run_pack(&workflow_dir, output),
         Commands::Install { workflow_file } => run_install(&workflow_file),
         Commands::Reload { bundle_id } => run_reload(&bundle_id),
-        Commands::Watch { workflow_dir, bundle_id } => run_watch(&workflow_dir, &bundle_id),
+        Commands::Watch {
+            workflow_dir,
+            bundle_id,
+        } => run_watch(&workflow_dir, &bundle_id),
         Commands::Sessions { query, path } => run_sessions(&query, &path),
         Commands::SessionContent { id, path } => run_session_content(&id, &path),
         Commands::Windows { query } => run_windows(&query),
@@ -148,61 +196,36 @@ fn main() {
     }
 }
 
+#[derive(Debug, Clone)]
+struct RepoSearchEntry {
+    display: String,
+    path: PathBuf,
+    root: String,
+    subtitle: Option<String>,
+    search_text: String,
+}
+
 fn run_code_search(query: &str, root: &str) {
     let root_path = expand_path(root);
 
     if !root_path.exists() {
-        Output::new(vec![Item::new(
-            format!("No directory found at {}", root),
-            "Check your code_root setting",
-        )
-        .valid(false)
-        .icon(Icon::path(
-            "/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/AlertStopIcon.icns",
-        ))])
-        .print();
+        print_missing_root(root, "Check your code_root setting");
         return;
     }
 
-    let repos = discover_repos(&root_path);
+    let repos = discover_repos_cached(&root_path);
     if repos.is_empty() {
-        Output::new(vec![Item::new("No git repositories found", format!("in {}", root))
-            .valid(false)
-            .icon(Icon::path("/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/GenericFolderIcon.icns"))])
-            .print();
+        print_no_repos(&format!("in {}", root));
         return;
     }
 
-    let mut items: Vec<Item> = repos
-        .iter()
-        .filter(|e| query.is_empty() || fuzzy_match(query, &e.display))
-        .map(|entry| {
-            let path_str = entry.path.to_string_lossy().to_string();
-            let relative_path = format!("{}/{}", root, &entry.display);
-            // Condense when last two path segments are the same (e.g., "org/gitedit/gitedit" -> "org/gitedit")
-            let parts: Vec<&str> = entry.display.rsplitn(2, '/').collect();
-            let display = if parts.len() == 2 && parts[0] == parts[1].rsplit('/').next().unwrap_or("") {
-                entry.display.rsplit_once('/').map(|(prefix, _)| prefix.to_string()).unwrap_or_else(|| entry.display.clone())
-            } else {
-                entry.display.clone()
-            };
-            Item::title_only(&display)
-                .uid(&path_str)
-                .arg(&path_str)
-                .match_field(&entry.display)
-                .autocomplete(&entry.display)
-                .file_type()
-                .icon(Icon::fileicon(&path_str))
-                .quicklook(&path_str)
-                .copy_text(&relative_path)
-                .cmd_mod(&relative_path, "Paste path")
-                .alt_mod(&path_str, "Browse sessions")
-        })
-        .collect();
-
-    if !query.is_empty() {
-        fuzzy_sort(&mut items, query, |item| &item.title);
-    }
+    let items = build_repo_items(
+        query,
+        repos
+            .into_iter()
+            .map(|entry| repo_search_entry(entry, root, None))
+            .collect(),
+    );
 
     Output::new(items).print();
 }
@@ -211,9 +234,201 @@ fn run_repos_search(query: &str, root: &str) {
     let root_path = expand_path(root);
 
     if !root_path.exists() {
+        print_missing_root(root, "Check your repos_root setting");
+        return;
+    }
+
+    let repos = discover_repos_structured_cached(&root_path);
+    if repos.is_empty() {
+        print_no_repos(&format!("in {}", root));
+        return;
+    }
+
+    let items = build_repo_items(
+        query,
+        repos
+            .into_iter()
+            .map(|entry| repo_search_entry(entry, root, None))
+            .collect(),
+    );
+
+    Output::new(items).print();
+}
+
+fn run_repos_code_search(query: &str, repos_root: &str, code_root: &str) {
+    let repos_root_path = expand_path(repos_root);
+    let code_root_path = expand_path(code_root);
+
+    let repos_exists = repos_root_path.exists();
+    let code_exists = code_root_path.exists();
+
+    if !repos_exists && !code_exists {
+        print_missing_root(
+            &format!("{repos_root} or {code_root}"),
+            "Check your repos_root and code_root settings",
+        );
+        return;
+    }
+
+    let repos_handle = repos_exists.then(|| {
+        let root_path = repos_root_path.clone();
+        thread::spawn(move || discover_repos_structured_cached(&root_path))
+    });
+    let code_handle = code_exists.then(|| {
+        let root_path = code_root_path.clone();
+        thread::spawn(move || discover_repos_cached(&root_path))
+    });
+
+    let mut entries = Vec::new();
+    if let Some(handle) = repos_handle {
+        if let Ok(repos) = handle.join() {
+            entries.extend(
+                repos
+                    .into_iter()
+                    .map(|entry| repo_search_entry(entry, repos_root, Some("repos"))),
+            );
+        }
+    }
+    if let Some(handle) = code_handle {
+        if let Ok(repos) = handle.join() {
+            entries.extend(
+                repos
+                    .into_iter()
+                    .map(|entry| repo_search_entry(entry, code_root, Some("code"))),
+            );
+        }
+    }
+
+    if entries.is_empty() {
+        let scope = match (repos_exists, code_exists) {
+            (true, true) => format!("in {repos_root} and {code_root}"),
+            (true, false) => format!("in {repos_root}"),
+            (false, true) => format!("in {code_root}"),
+            (false, false) => unreachable!(),
+        };
+        print_no_repos(&scope);
+        return;
+    }
+
+    let items = build_repo_items(query, entries);
+    Output::new(items).print();
+}
+
+fn repo_search_entry(entry: CodeEntry, root: &str, subtitle: Option<&str>) -> RepoSearchEntry {
+    let subtitle = subtitle.map(|text| text.to_string());
+    let search_text = subtitle
+        .as_ref()
+        .map(|text| format!("{} {}", entry.display, text))
+        .unwrap_or_else(|| entry.display.clone());
+
+    RepoSearchEntry {
+        display: entry.display,
+        path: entry.path,
+        root: root.to_string(),
+        subtitle,
+        search_text,
+    }
+}
+
+fn build_repo_items(query: &str, entries: Vec<RepoSearchEntry>) -> Vec<Item> {
+    let mut seen = HashSet::new();
+    let mut entries: Vec<RepoSearchEntry> = entries
+        .into_iter()
+        .filter(|entry| seen.insert(entry.path.clone()))
+        .filter(|entry| query.is_empty() || fuzzy_match(query, &entry.search_text))
+        .collect();
+
+    if !query.is_empty() {
+        entries.sort_by(|left, right| {
+            let left_score = fuzzy_score(query, &left.search_text);
+            let right_score = fuzzy_score(query, &right.search_text);
+            right_score
+                .cmp(&left_score)
+                .then_with(|| left.display.cmp(&right.display))
+        });
+    } else {
+        entries.sort_by(|left, right| left.display.cmp(&right.display));
+    }
+
+    entries
+        .into_iter()
+        .map(|entry| build_repo_item(entry))
+        .collect()
+}
+
+fn build_repo_item(entry: RepoSearchEntry) -> Item {
+    let path_str = entry.path.to_string_lossy().to_string();
+    let relative_path = format!("{}/{}", entry.root, entry.display);
+    let display = condensed_repo_display(&entry.display);
+
+    let item = if let Some(subtitle) = entry.subtitle.as_deref() {
+        Item::new(&display, subtitle)
+    } else {
+        Item::title_only(&display)
+    };
+
+    item.uid(&path_str)
+        .arg(&path_str)
+        .match_field(&entry.search_text)
+        .autocomplete(&entry.display)
+        .file_type()
+        .icon(Icon::fileicon(&path_str))
+        .quicklook(&path_str)
+        .copy_text(&relative_path)
+        .cmd_mod(&relative_path, "Paste path")
+        .alt_mod(&path_str, "Browse sessions")
+}
+
+fn condensed_repo_display(display: &str) -> String {
+    let parts: Vec<&str> = display.rsplitn(2, '/').collect();
+    if parts.len() == 2 && parts[0] == parts[1].rsplit('/').next().unwrap_or("") {
+        display
+            .rsplit_once('/')
+            .map(|(prefix, _)| prefix.to_string())
+            .unwrap_or_else(|| display.to_string())
+    } else {
+        display.to_string()
+    }
+}
+
+fn print_missing_root(root: &str, hint: &str) {
+    Output::new(vec![Item::new(
+        format!("No directory found at {}", root),
+        hint,
+    )
+    .valid(false)
+    .icon(Icon::path(
+        "/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/AlertStopIcon.icns",
+    ))])
+    .print();
+}
+
+fn print_no_repos(scope: &str) {
+    Output::new(vec![Item::new("No git repositories found", scope)
+        .valid(false)
+        .icon(Icon::path(
+            "/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/GenericFolderIcon.icns",
+        ))])
+    .print();
+}
+
+#[derive(Debug, Clone)]
+struct RecipeEntry {
+    path: PathBuf,
+    relative_path: String,
+    title: String,
+    summary: String,
+    paste_text: String,
+    search_text: String,
+}
+
+fn run_recipe_search(query: &str, root: &str) {
+    let root_path = expand_path(root);
+
+    if !root_path.exists() {
         Output::new(vec![Item::new(
             format!("No directory found at {}", root),
-            "Check your repos_root setting",
+            "Check your recipes root",
         )
         .valid(false)
         .icon(Icon::path(
@@ -223,53 +438,218 @@ fn run_repos_search(query: &str, root: &str) {
         return;
     }
 
-    let repos = discover_repos_structured(&root_path);
-    if repos.is_empty() {
-        Output::new(vec![Item::new("No git repositories found", format!("in {}", root))
+    let recipes = discover_recipe_entries(&root_path);
+    if recipes.is_empty() {
+        Output::new(vec![Item::new("No recipes found", format!("in {}", root))
             .valid(false)
-            .icon(Icon::path("/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/GenericFolderIcon.icns"))])
-            .print();
+            .icon(Icon::path(
+                "/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/GenericFolderIcon.icns",
+            ))])
+        .print();
         return;
     }
 
-    let mut items: Vec<Item> = repos
-        .iter()
-        .filter(|e| query.is_empty() || fuzzy_match(query, &e.display))
-        .map(|entry| {
-            let path_str = entry.path.to_string_lossy().to_string();
-            let relative_path = format!("{}/{}", root, &entry.display);
-            // Condense when last two path segments are the same (e.g., "org/gitedit/gitedit" -> "org/gitedit")
-            let parts: Vec<&str> = entry.display.rsplitn(2, '/').collect();
-            let display = if parts.len() == 2 && parts[0] == parts[1].rsplit('/').next().unwrap_or("") {
-                entry.display.rsplit_once('/').map(|(prefix, _)| prefix.to_string()).unwrap_or_else(|| entry.display.clone())
-            } else {
-                entry.display.clone()
-            };
-            Item::title_only(&display)
-                .uid(&path_str)
-                .arg(&path_str)  // Full path for opening
-                .match_field(&entry.display)  // Keep full path for matching
-                .autocomplete(&entry.display)
-                .icon(Icon::fileicon(&path_str))
-                .quicklook(&path_str)
-                .copy_text(&relative_path)  // Relative path for copy
-                .cmd_mod(&relative_path, "Paste path")
-                .alt_mod(&path_str, "Browse sessions")
-        })
-        .collect();
+    let query_lower = query.to_lowercase();
+    let mut filtered = recipes
+        .into_iter()
+        .filter(|entry| query.is_empty() || fuzzy_match(query, &entry.search_text))
+        .collect::<Vec<_>>();
 
     if !query.is_empty() {
-        fuzzy_sort(&mut items, query, |item| &item.title);
+        filtered.sort_by(|left, right| {
+            let left_score = fuzzy_score(&query_lower, &left.search_text);
+            let right_score = fuzzy_score(&query_lower, &right.search_text);
+            right_score
+                .cmp(&left_score)
+                .then_with(|| left.title.cmp(&right.title))
+        });
     }
+
+    let items = filtered
+        .into_iter()
+        .map(|entry| {
+            let path_str = entry.path.to_string_lossy().to_string();
+            let subtitle = if entry.summary.is_empty() {
+                entry.relative_path.clone()
+            } else {
+                format!("{}  |  {}", entry.summary, entry.relative_path)
+            };
+            Item::new(&entry.title, subtitle)
+                .uid(&path_str)
+                .arg(&path_str)
+                .match_field(&entry.search_text)
+                .autocomplete(&entry.title)
+                .quicklook(&path_str)
+                .icon(Icon::fileicon(&path_str))
+                .copy_text(&entry.paste_text)
+                .cmd_mod(&path_str, "Open recipe in Zed Preview")
+        })
+        .collect::<Vec<_>>();
 
     Output::new(items).print();
 }
 
-fn run_link(workflow_dir: &str, bundle_id: &str) {
-    let workflow_path = PathBuf::from(workflow_dir).canonicalize().unwrap_or_else(|_| {
-        let cwd = std::env::current_dir().unwrap_or_default();
-        cwd.join(workflow_dir)
+fn run_recipe_content(path: &str) {
+    let expanded = expand_path(path);
+    match load_recipe_entry(&expanded, expanded.parent()) {
+        Some(recipe) => print!("{}", recipe.paste_text),
+        None => {
+            eprintln!(
+                "Recipe file not found or unreadable: {}",
+                expanded.display()
+            );
+            std::process::exit(1);
+        }
+    }
+}
+
+fn discover_recipe_entries(root: &std::path::Path) -> Vec<RecipeEntry> {
+    let mut pending = vec![root.to_path_buf()];
+    let mut entries = Vec::new();
+
+    while let Some(dir) = pending.pop() {
+        let read_dir = match std::fs::read_dir(&dir) {
+            Ok(value) => value,
+            Err(_) => continue,
+        };
+        for entry in read_dir.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                pending.push(path);
+                continue;
+            }
+            if path.extension().and_then(|value| value.to_str()) != Some("md") {
+                continue;
+            }
+            if path.file_name().and_then(|value| value.to_str()) == Some("README.md") {
+                continue;
+            }
+            if let Some(recipe) = load_recipe_entry(&path, Some(root)) {
+                entries.push(recipe);
+            }
+        }
+    }
+
+    entries
+}
+
+fn load_recipe_entry(
+    path: &std::path::Path,
+    root: Option<&std::path::Path>,
+) -> Option<RecipeEntry> {
+    let raw = std::fs::read_to_string(path).ok()?;
+    let title = parse_recipe_title(&raw).unwrap_or_else(|| {
+        path.file_stem()
+            .and_then(|value| value.to_str())
+            .unwrap_or("recipe")
+            .replace('-', " ")
     });
+    let summary = parse_recipe_summary(&raw);
+    let paste_text = parse_recipe_paste_text(&raw).unwrap_or_else(|| raw.trim().to_string());
+    let relative_path = root
+        .and_then(|base| path.strip_prefix(base).ok())
+        .map(|value| value.to_string_lossy().to_string())
+        .unwrap_or_else(|| path.to_string_lossy().to_string());
+    let search_text = format!(
+        "{} {} {} {}",
+        title,
+        summary,
+        relative_path,
+        paste_text.lines().take(4).collect::<Vec<_>>().join(" ")
+    );
+
+    Some(RecipeEntry {
+        path: path.to_path_buf(),
+        relative_path,
+        title,
+        summary,
+        paste_text,
+        search_text,
+    })
+}
+
+fn parse_recipe_title(raw: &str) -> Option<String> {
+    raw.lines().find_map(|line| {
+        line.strip_prefix("# ")
+            .map(|value| value.trim().to_string())
+    })
+}
+
+fn parse_recipe_summary(raw: &str) -> String {
+    let mut in_code_block = false;
+    let mut paragraph = Vec::new();
+
+    for line in raw.lines() {
+        let trimmed = line.trim();
+        if trimmed.starts_with("```") {
+            in_code_block = !in_code_block;
+            continue;
+        }
+        if in_code_block {
+            continue;
+        }
+        if trimmed.starts_with('#') {
+            if !paragraph.is_empty() {
+                break;
+            }
+            continue;
+        }
+        if trimmed.is_empty() {
+            if !paragraph.is_empty() {
+                break;
+            }
+            continue;
+        }
+        paragraph.push(trimmed.to_string());
+    }
+
+    paragraph.join(" ")
+}
+
+fn parse_recipe_paste_text(raw: &str) -> Option<String> {
+    let mut in_paste_section = false;
+    let mut in_code_block = false;
+    let mut paste_lines = Vec::new();
+
+    for line in raw.lines() {
+        let trimmed = line.trim();
+        if let Some(heading) = trimmed.strip_prefix("## ") {
+            if in_paste_section && !paste_lines.is_empty() {
+                break;
+            }
+            in_paste_section = heading.to_ascii_lowercase().contains("paste");
+            continue;
+        }
+        if !in_paste_section {
+            continue;
+        }
+        if trimmed.starts_with("```") {
+            in_code_block = !in_code_block;
+            if !in_code_block && !paste_lines.is_empty() {
+                break;
+            }
+            continue;
+        }
+        if in_code_block {
+            paste_lines.push(line.to_string());
+        }
+    }
+
+    let paste_text = paste_lines.join("\n").trim().to_string();
+    if paste_text.is_empty() {
+        None
+    } else {
+        Some(paste_text)
+    }
+}
+
+fn run_link(workflow_dir: &str, bundle_id: &str) {
+    let workflow_path = PathBuf::from(workflow_dir)
+        .canonicalize()
+        .unwrap_or_else(|_| {
+            let cwd = std::env::current_dir().unwrap_or_default();
+            cwd.join(workflow_dir)
+        });
 
     if !workflow_path.exists() {
         eprintln!("Workflow directory not found: {:?}", workflow_path);
@@ -353,10 +733,12 @@ fn run_watch(workflow_dir: &str, bundle_id: &str) {
     use std::io::{BufRead, BufReader};
     use std::process::{Command, Stdio};
 
-    let workflow_path = PathBuf::from(workflow_dir).canonicalize().unwrap_or_else(|_| {
-        let cwd = std::env::current_dir().unwrap_or_default();
-        cwd.join(workflow_dir)
-    });
+    let workflow_path = PathBuf::from(workflow_dir)
+        .canonicalize()
+        .unwrap_or_else(|_| {
+            let cwd = std::env::current_dir().unwrap_or_default();
+            cwd.join(workflow_dir)
+        });
 
     if !workflow_path.exists() {
         eprintln!("Workflow directory not found: {:?}", workflow_path);
@@ -371,7 +753,10 @@ fn run_watch(workflow_dir: &str, bundle_id: &str) {
         .stdout(Stdio::piped())
         .spawn()
         .unwrap_or_else(|e| {
-            eprintln!("Failed to start fswatch: {}. Install with: brew install fswatch", e);
+            eprintln!(
+                "Failed to start fswatch: {}. Install with: brew install fswatch",
+                e
+            );
             std::process::exit(1);
         });
 
@@ -401,9 +786,12 @@ fn run_sessions(query: &str, project_path: &str) {
     let sessions_dir = claude_dir.join(&project_folder);
 
     if !sessions_dir.exists() {
-        Output::new(vec![Item::new("No sessions found", &format!("for {}", project_path))
-            .valid(false)])
-            .print();
+        Output::new(vec![Item::new(
+            "No sessions found",
+            &format!("for {}", project_path),
+        )
+        .valid(false)])
+        .print();
         return;
     }
 
@@ -426,12 +814,17 @@ fn run_sessions(query: &str, project_path: &str) {
                                 // Get first user message
                                 if first_user_msg.is_empty() {
                                     if json.get("type").and_then(|t| t.as_str()) == Some("user") {
-                                        if let Some(msg) = json.get("message")
+                                        if let Some(msg) = json
+                                            .get("message")
                                             .and_then(|m| m.get("content"))
                                             .and_then(|c| c.as_str())
                                         {
                                             first_user_msg = msg.chars().take(80).collect();
-                                            first_user_msg = first_user_msg.lines().next().unwrap_or("").to_string();
+                                            first_user_msg = first_user_msg
+                                                .lines()
+                                                .next()
+                                                .unwrap_or("")
+                                                .to_string();
                                         }
                                     }
                                 }
@@ -467,21 +860,23 @@ fn run_sessions(query: &str, project_path: &str) {
     sessions.sort_by(|a, b| b.3.cmp(&a.3));
 
     if sessions.is_empty() {
-        Output::new(vec![Item::new("No sessions found", &format!("for {}", project_path))
-            .valid(false)])
-            .print();
+        Output::new(vec![Item::new(
+            "No sessions found",
+            &format!("for {}", project_path),
+        )
+        .valid(false)])
+        .print();
         return;
     }
 
     let items: Vec<Item> = sessions
         .iter()
-        .filter(|(_, msg, _, _)| query.is_empty() || msg.to_lowercase().contains(&query.to_lowercase()))
+        .filter(|(_, msg, _, _)| {
+            query.is_empty() || msg.to_lowercase().contains(&query.to_lowercase())
+        })
         .map(|(id, msg, time, _)| {
             let arg = format!("{}|{}", id, project_path);
-            Item::new(msg, time)
-                .uid(id)
-                .arg(&arg)
-                .match_field(msg)
+            Item::new(msg, time).uid(id).arg(&arg).match_field(msg)
         })
         .collect();
 
@@ -514,7 +909,9 @@ fn run_session_content(session_id: &str, project_path: &str) {
         .unwrap_or_default();
 
     let project_folder = project_path.replace('/', "-");
-    let session_file = claude_dir.join(&project_folder).join(format!("{}.jsonl", session_id));
+    let session_file = claude_dir
+        .join(&project_folder)
+        .join(format!("{}.jsonl", session_id));
 
     if !session_file.exists() {
         eprintln!("Session file not found: {:?}", session_file);
@@ -536,13 +933,21 @@ fn run_session_content(session_id: &str, project_path: &str) {
             let msg_type = json.get("type").and_then(|t| t.as_str()).unwrap_or("");
 
             if msg_type == "user" {
-                if let Some(msg) = json.get("message").and_then(|m| m.get("content")).and_then(|c| c.as_str()) {
+                if let Some(msg) = json
+                    .get("message")
+                    .and_then(|m| m.get("content"))
+                    .and_then(|c| c.as_str())
+                {
                     output.push_str("\n## User\n\n");
                     output.push_str(msg);
                     output.push_str("\n");
                 }
             } else if msg_type == "assistant" {
-                if let Some(content_arr) = json.get("message").and_then(|m| m.get("content")).and_then(|c| c.as_array()) {
+                if let Some(content_arr) = json
+                    .get("message")
+                    .and_then(|m| m.get("content"))
+                    .and_then(|c| c.as_array())
+                {
                     for item in content_arr {
                         if item.get("type").and_then(|t| t.as_str()) == Some("text") {
                             if let Some(text) = item.get("text").and_then(|t| t.as_str()) {
@@ -562,14 +967,16 @@ fn run_session_content(session_id: &str, project_path: &str) {
 }
 
 fn run_windows(query: &str) {
-    use std::process::Command;
-    use std::time::{SystemTime, Duration};
     use std::fs;
     use std::path::PathBuf;
+    use std::process::Command;
+    use std::time::{Duration, SystemTime};
 
     // Cache directory for Alfred workflow
     let cache_dir = dirs::home_dir()
-        .map(|h| h.join("Library/Caches/com.runningwithcrayons.Alfred/Workflow Data/nikiv.dev.flow"))
+        .map(|h| {
+            h.join("Library/Caches/com.runningwithcrayons.Alfred/Workflow Data/nikiv.dev.flow")
+        })
         .unwrap_or_else(|| PathBuf::from("/tmp"));
 
     let cache_file = cache_dir.join("windows.json");
@@ -591,7 +998,8 @@ fn run_windows(query: &str) {
     };
 
     // Check cache age (valid for 2 seconds)
-    let cache_age = cache_file.metadata()
+    let cache_age = cache_file
+        .metadata()
         .ok()
         .and_then(|m| m.modified().ok())
         .and_then(|t| SystemTime::now().duration_since(t).ok())
@@ -647,7 +1055,8 @@ fn run_windows(query: &str) {
 
     // Use fresh data if available, otherwise cached
     let output_data = fresh_data.or(cached_data).unwrap_or_else(|| {
-        r#"{"items":[{"title":"Error","subtitle":"Could not get windows","valid":false}]}"#.to_string()
+        r#"{"items":[{"title":"Error","subtitle":"Could not get windows","valid":false}]}"#
+            .to_string()
     });
 
     // Parse and filter
@@ -705,7 +1114,12 @@ fn run_raise_window(arg: &str) {
             Err(_) => return,
         };
 
-        let jxa = format!(r#"const se=Application('System Events');const p=se.processes.byName('{}');p.frontmost=true;const w=p.windows[{}];if(w)try{{w.actions.byName('AXRaise').perform();}}catch(e){{}}"#, app_name, window_index);
-        let _ = Command::new("osascript").args(["-l", "JavaScript", "-e", &jxa]).output();
+        let jxa = format!(
+            r#"const se=Application('System Events');const p=se.processes.byName('{}');p.frontmost=true;const w=p.windows[{}];if(w)try{{w.actions.byName('AXRaise').perform();}}catch(e){{}}"#,
+            app_name, window_index
+        );
+        let _ = Command::new("osascript")
+            .args(["-l", "JavaScript", "-e", &jxa])
+            .output();
     }
 }

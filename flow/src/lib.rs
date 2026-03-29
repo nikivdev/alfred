@@ -14,10 +14,12 @@
 //! ```
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+use std::collections::{hash_map::DefaultHasher, HashSet};
 use std::fs;
+use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::time::Duration;
 
 /// Configuration for flow-alfred
 #[derive(Debug, Default, Deserialize)]
@@ -346,7 +348,11 @@ pub fn workflows_dir() -> Option<PathBuf> {
 
     // Check for sync folder first (via defaults)
     if let Ok(output) = std::process::Command::new("defaults")
-        .args(["read", "com.runningwithcrayons.Alfred-Preferences", "syncfolder"])
+        .args([
+            "read",
+            "com.runningwithcrayons.Alfred-Preferences",
+            "syncfolder",
+        ])
         .output()
     {
         if output.status.success() {
@@ -390,7 +396,10 @@ pub fn link_workflow(workflow_dir: &Path, bundle_id: &str) -> Result<PathBuf, St
         if dest.is_symlink() {
             fs::remove_file(&dest).map_err(|e| format!("Failed to remove symlink: {}", e))?;
         } else {
-            return Err(format!("Destination exists and is not a symlink: {:?}", dest));
+            return Err(format!(
+                "Destination exists and is not a symlink: {:?}",
+                dest
+            ));
         }
     }
 
@@ -417,7 +426,13 @@ pub fn unlink_workflow(bundle_id: &str) -> Result<(), String> {
 /// Reload a workflow in Alfred (refreshes canvas without restart)
 pub fn reload_workflow(bundle_id: &str) -> Result<(), String> {
     Command::new("osascript")
-        .args(["-e", &format!("tell application \"Alfred\" to reload workflow \"{}\"", bundle_id)])
+        .args([
+            "-e",
+            &format!(
+                "tell application \"Alfred\" to reload workflow \"{}\"",
+                bundle_id
+            ),
+        ])
         .output()
         .map_err(|e| format!("Failed to reload workflow: {}", e))?;
     Ok(())
@@ -537,7 +552,12 @@ where
 // Code/Project Discovery
 // ============================================================================
 
+const REPO_DISCOVERY_CACHE_TTL: Duration = Duration::from_secs(5);
+const REPO_DISCOVERY_CACHE_VERSION: u8 = 1;
+const DEFAULT_BUNDLE_ID: &str = "nikiv.dev.flow";
+
 /// Entry representing a discovered code repository
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CodeEntry {
     /// Display name (relative path from root)
     pub display: String,
@@ -545,9 +565,35 @@ pub struct CodeEntry {
     pub path: PathBuf,
 }
 
+#[derive(Debug, Clone, Copy)]
+enum RepoDiscoveryMode {
+    Flat,
+    Structured,
+}
+
+impl RepoDiscoveryMode {
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Flat => "flat",
+            Self::Structured => "structured",
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct RepoDiscoveryCache {
+    version: u8,
+    entries: Vec<CodeEntry>,
+}
+
 /// Discover git repositories under a root directory
 pub fn discover_repos(root: &Path) -> Vec<CodeEntry> {
     discover_repos_with_config(root, &Config::load())
+}
+
+/// Discover git repositories under a root directory with short-lived caching
+pub fn discover_repos_cached(root: &Path) -> Vec<CodeEntry> {
+    discover_repos_cached_with_config(root, &Config::load())
 }
 
 /// Discover git repositories with custom config
@@ -596,7 +642,10 @@ pub fn discover_repos_with_config(root: &Path, config: &Config) -> Vec<CodeEntry
                     .to_string();
                 let key = path.to_string_lossy().to_string();
                 if seen.insert(key) {
-                    repos.push(CodeEntry { display, path: path.clone() });
+                    repos.push(CodeEntry {
+                        display,
+                        path: path.clone(),
+                    });
                 }
                 // Continue searching for nested repos
             }
@@ -609,9 +658,19 @@ pub fn discover_repos_with_config(root: &Path, config: &Config) -> Vec<CodeEntry
     repos
 }
 
+/// Discover git repositories with short-lived caching and custom config
+pub fn discover_repos_cached_with_config(root: &Path, config: &Config) -> Vec<CodeEntry> {
+    discover_repos_with_cache(root, config, RepoDiscoveryMode::Flat)
+}
+
 /// Discover git repositories in owner/repo structure (like ~/repos)
 pub fn discover_repos_structured(root: &Path) -> Vec<CodeEntry> {
     discover_repos_structured_with_config(root, &Config::load())
+}
+
+/// Discover git repositories in owner/repo structure with short-lived caching
+pub fn discover_repos_structured_cached(root: &Path) -> Vec<CodeEntry> {
+    discover_repos_structured_cached_with_config(root, &Config::load())
 }
 
 /// Discover git repositories in owner/repo structure with custom config
@@ -684,6 +743,105 @@ pub fn discover_repos_structured_with_config(root: &Path, config: &Config) -> Ve
 
     repos.sort_by(|a, b| a.display.cmp(&b.display));
     repos
+}
+
+/// Discover structured git repositories with short-lived caching and custom config
+pub fn discover_repos_structured_cached_with_config(
+    root: &Path,
+    config: &Config,
+) -> Vec<CodeEntry> {
+    discover_repos_with_cache(root, config, RepoDiscoveryMode::Structured)
+}
+
+fn discover_repos_with_cache(
+    root: &Path,
+    config: &Config,
+    mode: RepoDiscoveryMode,
+) -> Vec<CodeEntry> {
+    if let Some(entries) = load_repo_discovery_cache(root, config, mode) {
+        return entries;
+    }
+
+    let entries = match mode {
+        RepoDiscoveryMode::Flat => discover_repos_with_config(root, config),
+        RepoDiscoveryMode::Structured => discover_repos_structured_with_config(root, config),
+    };
+    store_repo_discovery_cache(root, config, mode, &entries);
+    entries
+}
+
+fn load_repo_discovery_cache(
+    root: &Path,
+    config: &Config,
+    mode: RepoDiscoveryMode,
+) -> Option<Vec<CodeEntry>> {
+    let cache_file = repo_discovery_cache_file(root, config, mode)?;
+    let metadata = fs::metadata(&cache_file).ok()?;
+    let age = metadata.modified().ok()?.elapsed().ok()?;
+    if age > REPO_DISCOVERY_CACHE_TTL {
+        return None;
+    }
+
+    let cache =
+        serde_json::from_str::<RepoDiscoveryCache>(&fs::read_to_string(&cache_file).ok()?).ok()?;
+    (cache.version == REPO_DISCOVERY_CACHE_VERSION).then_some(cache.entries)
+}
+
+fn store_repo_discovery_cache(
+    root: &Path,
+    config: &Config,
+    mode: RepoDiscoveryMode,
+    entries: &[CodeEntry],
+) {
+    let Some(cache_file) = repo_discovery_cache_file(root, config, mode) else {
+        return;
+    };
+
+    let cache = RepoDiscoveryCache {
+        version: REPO_DISCOVERY_CACHE_VERSION,
+        entries: entries.to_vec(),
+    };
+
+    let Ok(serialized) = serde_json::to_string(&cache) else {
+        return;
+    };
+
+    let temp_file = cache_file.with_extension(format!("{}.tmp", std::process::id()));
+    if fs::write(&temp_file, serialized).is_ok() {
+        let _ = fs::rename(&temp_file, &cache_file);
+        let _ = fs::remove_file(&temp_file);
+    }
+}
+
+fn repo_discovery_cache_file(
+    root: &Path,
+    config: &Config,
+    mode: RepoDiscoveryMode,
+) -> Option<PathBuf> {
+    let cache_root = repo_discovery_cache_root()?;
+    let _ = fs::create_dir_all(&cache_root);
+
+    let mut hasher = DefaultHasher::new();
+    root.hash(&mut hasher);
+    mode.as_str().hash(&mut hasher);
+    for pattern in &config.exclude {
+        pattern.hash(&mut hasher);
+    }
+
+    Some(cache_root.join(format!(
+        "repo-discovery-{}-{:016x}.json",
+        mode.as_str(),
+        hasher.finish()
+    )))
+}
+
+fn repo_discovery_cache_root() -> Option<PathBuf> {
+    cache_dir().or_else(|| {
+        dirs::home_dir().map(|home| {
+            home.join("Library/Caches/com.runningwithcrayons.Alfred/Workflow Data")
+                .join(DEFAULT_BUNDLE_ID)
+        })
+    })
 }
 
 fn should_skip_dir(name: &str) -> bool {
@@ -856,10 +1014,18 @@ impl ScriptFilter {
     <key>version</key>
     <integer>3</integer>
 </dict>"#,
-            alfredfiltersresults = if self.alfred_filters_results { "true" } else { "false" },
+            alfredfiltersresults = if self.alfred_filters_results {
+                "true"
+            } else {
+                "false"
+            },
             argumenttype = self.argument_type.to_plist_value(),
             keyword = xml_escape(&self.keyword),
-            queuedelayimmediately = if self.queue_delay_immediately { "true" } else { "false" },
+            queuedelayimmediately = if self.queue_delay_immediately {
+                "true"
+            } else {
+                "false"
+            },
             runningsubtext = xml_escape(&self.running_subtext),
             script = script_escaped,
             subtitle = xml_escape(&self.subtitle),
@@ -910,7 +1076,11 @@ impl ExternalTrigger {
     <key>version</key>
     <integer>1</integer>
 </dict>"#,
-            available_via_url = if self.available_via_url { "true" } else { "false" },
+            available_via_url = if self.available_via_url {
+                "true"
+            } else {
+                "false"
+            },
             trigger_id = xml_escape(&self.trigger_id),
             uid = &self.uid,
         )
@@ -1047,7 +1217,9 @@ pub fn bundle_id() -> Option<String> {
 
 /// Get workflow data directory
 pub fn data_dir() -> Option<PathBuf> {
-    std::env::var("alfred_workflow_data").ok().map(PathBuf::from)
+    std::env::var("alfred_workflow_data")
+        .ok()
+        .map(PathBuf::from)
 }
 
 /// Get workflow cache directory
