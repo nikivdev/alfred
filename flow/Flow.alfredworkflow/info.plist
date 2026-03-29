@@ -325,7 +325,7 @@ echo "Copied session to clipboard"</string>
 			<key>config</key>
 			<dict>
 				<key>alfredfiltersresults</key>
-				<true/>
+				<false/>
 				<key>alfredfiltersresultsmatchmode</key>
 				<integer>2</integer>
 				<key>argumenttreatemptyqueryasnil</key>
@@ -374,7 +374,7 @@ echo "Copied session to clipboard"</string>
 			<key>config</key>
 			<dict>
 				<key>alfredfiltersresults</key>
-				<true/>
+				<false/>
 				<key>alfredfiltersresultsmatchmode</key>
 				<integer>2</integer>
 				<key>argumenttreatemptyqueryasnil</key>
@@ -446,7 +446,7 @@ code_root="${code_root:-~/code}"
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>script</key>
-				<string>open -a "Zed Preview" "$1"</string>
+				<string>open -a "Zed" "$1"</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -465,7 +465,7 @@ code_root="${code_root:-~/code}"
 			<key>config</key>
 			<dict>
 				<key>availableviaurlhandler</key>
-				<false/>
+				<true/>
 				<key>triggerid</key>
 				<string>code</string>
 			</dict>
@@ -527,7 +527,7 @@ code_root="${code_root:-~/code}"
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>script</key>
-				<string>open -a "Zed Preview" "$1"</string>
+				<string>open -a "Zed" "$1"</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -584,7 +584,7 @@ echo "Copied recipe to clipboard"</string>
 			<key>config</key>
 			<dict>
 				<key>availableviaurlhandler</key>
-				<false/>
+				<true/>
 				<key>triggerid</key>
 				<string>repos</string>
 			</dict>
@@ -599,7 +599,7 @@ echo "Copied recipe to clipboard"</string>
 			<key>config</key>
 			<dict>
 				<key>availableviaurlhandler</key>
-				<false/>
+				<true/>
 				<key>triggerid</key>
 				<string>repos-code</string>
 			</dict>
@@ -629,7 +629,7 @@ echo "Copied recipe to clipboard"</string>
 			<key>config</key>
 			<dict>
 				<key>alfredfiltersresults</key>
-				<true/>
+				<false/>
 				<key>alfredfiltersresultsmatchmode</key>
 				<integer>2</integer>
 				<key>argumenttreatemptyqueryasnil</key>
@@ -694,7 +694,7 @@ repos_root="${repos_root:-~/repos}"
 			<key>config</key>
 			<dict>
 				<key>alfredfiltersresults</key>
-				<true/>
+				<false/>
 				<key>alfredfiltersresultsmatchmode</key>
 				<integer>2</integer>
 				<key>argumenttreatemptyqueryasnil</key>
