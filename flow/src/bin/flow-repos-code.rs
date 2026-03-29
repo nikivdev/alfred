@@ -13,11 +13,12 @@ use flow_alfred::{
 use rusqlite::{params, Connection, OpenFlags, OptionalExtension};
 
 const INDEX_SCHEMA_VERSION: i64 = 1;
-const INDEX_SOFT_TTL: Duration = Duration::from_secs(60);
+const INDEX_SOFT_TTL: Duration = Duration::from_secs(10 * 60);
 const REFRESH_LOCK_STALE_AFTER: Duration = Duration::from_secs(10 * 60);
 const INDEX_FILENAME: &str = "repos-code-index.sqlite3";
 const REFRESH_LOCK_HELD_ENV: &str = "FLOW_REPOS_CODE_LOCK_HELD";
 const INDEX_PATH_ENV: &str = "FLOW_REPOS_CODE_INDEX_PATH";
+const INDEX_RERUN_SECS: f64 = 0.2;
 const MAX_EMPTY_QUERY_ITEMS: usize = 32;
 const GENERIC_FOLDER_ICON_PATH: &str =
     "/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/GenericFolderIcon.icns";
@@ -84,6 +85,7 @@ struct IndexSnapshot {
 #[derive(Debug)]
 enum IndexReadError {
     Missing,
+    #[allow(dead_code)]
     Broken(String),
 }
 
@@ -251,27 +253,49 @@ fn run_repos_code_search(query: &str, context: &SearchContext) {
         return;
     }
 
-    let snapshot = match load_or_bootstrap_snapshot(context) {
-        Ok(snapshot) => snapshot,
-        Err(_) => {
-            let entries = discover_entries_from_disk(context);
-            render_entries(query, context, entries);
-            return;
+    match read_index_snapshot(context) {
+        Ok(snapshot) => {
+            let is_stale = snapshot.is_stale(context);
+
+            if snapshot.entries.is_empty() {
+                if is_stale && maybe_spawn_background_refresh(context) {
+                    print_refreshing_index(context);
+                    return;
+                }
+
+                let entries = discover_entries_from_disk(context);
+                render_entries(query, context, entries, None);
+                return;
+            }
+
+            let rerun = if is_stale && maybe_spawn_background_refresh(context) {
+                Some(INDEX_RERUN_SECS)
+            } else {
+                None
+            };
+
+            render_entries(query, context, snapshot.entries, rerun);
         }
-    };
+        Err(IndexReadError::Broken(_)) => {
+            quarantine_index_files(&context.db_path);
+            if maybe_spawn_background_refresh(context) {
+                print_refreshing_index(context);
+                return;
+            }
 
-    if snapshot.entries.is_empty() && snapshot.is_stale(context) {
-        let _ = refresh_index_sync(context);
-    } else if snapshot.is_stale(context) {
-        maybe_spawn_background_refresh(context);
+            let entries = discover_entries_from_disk(context);
+            render_entries(query, context, entries, None);
+        }
+        Err(IndexReadError::Missing) => {
+            if maybe_spawn_background_refresh(context) {
+                print_refreshing_index(context);
+                return;
+            }
+
+            let entries = discover_entries_from_disk(context);
+            render_entries(query, context, entries, None);
+        }
     }
-
-    let entries = match read_index_snapshot(context) {
-        Ok(snapshot) => snapshot.entries,
-        Err(_) => snapshot.entries,
-    };
-
-    render_entries(query, context, entries);
 }
 
 fn run_refresh_index_command(context: &SearchContext) {
@@ -289,6 +313,7 @@ fn run_refresh_index_command(context: &SearchContext) {
     let _ = refresh_index_locked(context, lock);
 }
 
+#[cfg(test)]
 fn load_or_bootstrap_snapshot(context: &SearchContext) -> Result<IndexSnapshot, String> {
     let mut bootstrapped = false;
 
@@ -378,6 +403,7 @@ fn load_meta_value(conn: &Connection, key: &str) -> rusqlite::Result<Option<Stri
         .optional()
 }
 
+#[cfg(test)]
 fn refresh_index_sync(context: &SearchContext) -> Result<(), String> {
     let Some(lock) = RefreshLock::acquire(&context.lock_path) else {
         return Err("refresh already running".to_string());
@@ -570,13 +596,13 @@ fn initialize_schema(conn: &Connection) -> rusqlite::Result<()> {
     )
 }
 
-fn maybe_spawn_background_refresh(context: &SearchContext) {
+fn maybe_spawn_background_refresh(context: &SearchContext) -> bool {
     let Some(lock) = RefreshLock::acquire(&context.lock_path) else {
-        return;
+        return true;
     };
 
     let Ok(current_exe) = std::env::current_exe() else {
-        return;
+        return false;
     };
 
     let spawn_result = Command::new(current_exe)
@@ -590,8 +616,11 @@ fn maybe_spawn_background_refresh(context: &SearchContext) {
         .spawn();
 
     match spawn_result {
-        Ok(_) => lock.disarm(),
-        Err(_) => {}
+        Ok(_) => {
+            lock.disarm();
+            true
+        }
+        Err(_) => false,
     }
 }
 
@@ -671,14 +700,24 @@ fn discover_entries_from_disk(context: &SearchContext) -> Vec<RepoSearchEntry> {
     entries
 }
 
-fn render_entries(query: &str, context: &SearchContext, entries: Vec<RepoSearchEntry>) {
+fn render_entries(
+    query: &str,
+    context: &SearchContext,
+    entries: Vec<RepoSearchEntry>,
+    rerun: Option<f64>,
+) {
     if entries.is_empty() {
         print_no_repos(&context.scope_description());
         return;
     }
 
     let items = build_repo_items(query, entries, context);
-    Output::new(items).print();
+    let output = if let Some(seconds) = rerun {
+        Output::new(items).rerun(seconds)
+    } else {
+        Output::new(items)
+    };
+    output.print();
 }
 
 fn repo_search_entry(entry: CodeEntry, root_kind: RootKind) -> RepoSearchEntry {
@@ -859,6 +898,14 @@ fn print_no_repos(scope: &str) {
         .icon(Icon::path(
             "/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/GenericFolderIcon.icns",
         ))])
+    .print();
+}
+
+fn print_refreshing_index(context: &SearchContext) {
+    Output::new(vec![Item::new("Indexing repos and code…", context.scope_description())
+        .valid(false)
+        .icon(Icon::path(GENERIC_FOLDER_ICON_PATH))])
+    .rerun(INDEX_RERUN_SECS)
     .print();
 }
 
