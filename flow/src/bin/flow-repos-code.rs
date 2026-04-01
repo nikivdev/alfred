@@ -129,20 +129,31 @@ impl SearchContext {
         let db_path = index_db_path();
         let lock_path = refresh_lock_path(&db_path);
 
-        Self::new(repos_root, code_root, config, repos_root_path, code_root_path, db_path, lock_path)
+        Self::new(
+            repos_root,
+            code_root,
+            config,
+            repos_root_path,
+            code_root_path,
+            db_path,
+            lock_path,
+        )
     }
 
     #[cfg(test)]
-    fn for_test(
-        repos_root: String,
-        code_root: String,
-        config: Config,
-        db_path: PathBuf,
-    ) -> Self {
+    fn for_test(repos_root: String, code_root: String, config: Config, db_path: PathBuf) -> Self {
         let repos_root_path = expand_path(&repos_root);
         let code_root_path = expand_path(&code_root);
         let lock_path = refresh_lock_path(&db_path);
-        Self::new(repos_root, code_root, config, repos_root_path, code_root_path, db_path, lock_path)
+        Self::new(
+            repos_root,
+            code_root,
+            config,
+            repos_root_path,
+            code_root_path,
+            db_path,
+            lock_path,
+        )
     }
 
     fn new(
@@ -154,8 +165,12 @@ impl SearchContext {
         db_path: PathBuf,
         lock_path: PathBuf,
     ) -> Self {
-        let config_hash =
-            compute_config_hash(&repos_root_path, &code_root_path, &config, INDEX_SCHEMA_VERSION);
+        let config_hash = compute_config_hash(
+            &repos_root_path,
+            &code_root_path,
+            &config,
+            INDEX_SCHEMA_VERSION,
+        );
 
         Self {
             repos_exists: repos_root_path.exists(),
@@ -195,8 +210,9 @@ impl IndexSnapshot {
         }
 
         match self.last_full_refresh_at {
-            Some(last_refresh_at) => now_unix_timestamp().saturating_sub(last_refresh_at)
-                > INDEX_SOFT_TTL.as_secs(),
+            Some(last_refresh_at) => {
+                now_unix_timestamp().saturating_sub(last_refresh_at) > INDEX_SOFT_TTL.as_secs()
+            }
             None => true,
         }
     }
@@ -349,7 +365,8 @@ fn read_index_snapshot(context: &SearchContext) -> Result<IndexSnapshot, IndexRe
     conn.busy_timeout(Duration::from_millis(25))
         .map_err(|err| IndexReadError::Broken(err.to_string()))?;
 
-    let entries = load_index_entries(&conn).map_err(|err| IndexReadError::Broken(err.to_string()))?;
+    let entries =
+        load_index_entries(&conn).map_err(|err| IndexReadError::Broken(err.to_string()))?;
     let last_full_refresh_at = load_meta_value(&conn, "last_full_refresh_at")
         .map_err(|err| IndexReadError::Broken(err.to_string()))?
         .and_then(|value| value.parse::<u64>().ok());
@@ -363,7 +380,9 @@ fn read_index_snapshot(context: &SearchContext) -> Result<IndexSnapshot, IndexRe
         .unwrap_or_default()
         != INDEX_SCHEMA_VERSION
     {
-        return Err(IndexReadError::Broken("schema version mismatch".to_string()));
+        return Err(IndexReadError::Broken(
+            "schema version mismatch".to_string(),
+        ));
     }
 
     Ok(IndexSnapshot {
@@ -399,8 +418,10 @@ fn load_index_entries(conn: &Connection) -> rusqlite::Result<Vec<RepoSearchEntry
 }
 
 fn load_meta_value(conn: &Connection, key: &str) -> rusqlite::Result<Option<String>> {
-    conn.query_row("SELECT value FROM meta WHERE key = ?1", [key], |row| row.get(0))
-        .optional()
+    conn.query_row("SELECT value FROM meta WHERE key = ?1", [key], |row| {
+        row.get(0)
+    })
+    .optional()
 }
 
 #[cfg(test)]
@@ -731,7 +752,11 @@ fn repo_search_entry(entry: CodeEntry, root_kind: RootKind) -> RepoSearchEntry {
     }
 }
 
-fn build_repo_items(query: &str, entries: Vec<RepoSearchEntry>, context: &SearchContext) -> Vec<Item> {
+fn build_repo_items(
+    query: &str,
+    entries: Vec<RepoSearchEntry>,
+    context: &SearchContext,
+) -> Vec<Item> {
     let mut seen = HashSet::new();
     let mut entries: Vec<RepoSearchEntry> = entries
         .into_iter()
@@ -854,6 +879,7 @@ fn simple_fuzzy_score_lower(query_lower: &str, target_lower: &str) -> i32 {
 fn build_repo_item(entry: RepoSearchEntry, context: &SearchContext) -> Item {
     let path_str = entry.path.to_string_lossy().to_string();
     let relative_path = format!("{}/{}", context.copy_root(entry.root_kind), entry.display);
+    let copy_path = format!("{} ", relative_path);
     let display = condensed_repo_display(&entry.display);
 
     Item::new(&display, entry.root_kind.as_str())
@@ -863,7 +889,7 @@ fn build_repo_item(entry: RepoSearchEntry, context: &SearchContext) -> Item {
         .file_type()
         .icon(Icon::path(GENERIC_FOLDER_ICON_PATH))
         .quicklook(&path_str)
-        .copy_text(&relative_path)
+        .copy_text(&copy_path)
         .cmd_mod(&relative_path, "Paste path")
         .alt_mod(&path_str, "Browse sessions")
 }
@@ -902,9 +928,12 @@ fn print_no_repos(scope: &str) {
 }
 
 fn print_refreshing_index(context: &SearchContext) {
-    Output::new(vec![Item::new("Indexing repos and code…", context.scope_description())
-        .valid(false)
-        .icon(Icon::path(GENERIC_FOLDER_ICON_PATH))])
+    Output::new(vec![Item::new(
+        "Indexing repos and code…",
+        context.scope_description(),
+    )
+    .valid(false)
+    .icon(Icon::path(GENERIC_FOLDER_ICON_PATH))])
     .rerun(INDEX_RERUN_SECS)
     .print();
 }
@@ -940,7 +969,12 @@ fn quarantine_index_files(db_path: &Path) {
             continue;
         }
 
-        let target = PathBuf::from(format!("{}.corrupt-{}{}", db_path.display(), timestamp, suffix));
+        let target = PathBuf::from(format!(
+            "{}.corrupt-{}{}",
+            db_path.display(),
+            timestamp,
+            suffix
+        ));
         let _ = fs::rename(&source, target);
     }
 }
@@ -1059,7 +1093,11 @@ mod tests {
         let context = dirs.context();
         refresh_index_sync(&context).unwrap();
         let snapshot = load_or_bootstrap_snapshot(&context).unwrap();
-        let displays: Vec<_> = snapshot.entries.iter().map(|entry| entry.display.as_str()).collect();
+        let displays: Vec<_> = snapshot
+            .entries
+            .iter()
+            .map(|entry| entry.display.as_str())
+            .collect();
 
         assert!(displays.contains(&"owner/repo"));
         assert!(displays.contains(&"flow"));

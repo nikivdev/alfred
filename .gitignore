@@ -50,3 +50,6 @@ flow/Flow.alfredworkflow/flow-alfred
 .flox/
 
 .ai/review-log.jsonl
+.ai/docs/session-changes/
+.ai/skills/
+codedb.snapshot

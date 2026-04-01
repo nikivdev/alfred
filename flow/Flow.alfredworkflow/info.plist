@@ -21,6 +21,19 @@
 				<false/>
 			</dict>
 		</array>
+		<key>1C06903F-8D61-47F7-AC4B-20FB6379D99E</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>AGENTS-SCRIPT-FILTER-UID</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
 		<key>9D8DCB6B-8E82-414E-99D3-3FF55A6E2A12</key>
 		<array>
 			<dict>
@@ -67,6 +80,98 @@
 				<false/>
 			</dict>
 		</array>
+		<key>AGENTS-EXT-TRIGGER-UID</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>1C06903F-8D61-47F7-AC4B-20FB6379D99E</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>AGENTS-SCRIPT-FILTER-UID</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>PASTE-PATH-CLIPBOARD-UID</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>REPOS-OPEN-FILE-UID</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>DOCS-COPY-PATH-CLIPBOARD-UID</string>
+				<key>modifiers</key>
+				<integer>524288</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>CODEX-TABS-EXT-TRIGGER-UID</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>CODEX-TABS-SCRIPT-FILTER-UID</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>CODEX-TABS-SCRIPT-FILTER-UID</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>CODEX-TABS-OPEN-URL-UID</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>DOCS-COPY-PATH-CLIPBOARD-UID</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>DOCS-COPY-PATH-CLIPBOARD-UID</string>
+				<key>modifiers</key>
+				<integer>524288</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
 		<key>DEBCD6DE-5BEB-4EB8-8EBB-7929AEDC5A35</key>
 		<array>
 			<dict>
@@ -90,6 +195,98 @@
 				<false/>
 			</dict>
 		</array>
+		<key>DOCS-EXT-TRIGGER-UID</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>DOCS-SCRIPT-FILTER-UID</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>DOCS-RECENT-EXT-TRIGGER-UID</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>DOCS-RECENT-SCRIPT-FILTER-UID</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>DOCS-RECENT-SCRIPT-FILTER-UID</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>REPOS-OPEN-FILE-UID</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>DOCS-COPY-PATH-CLIPBOARD-UID</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>DOCS-COPY-PATH-CLIPBOARD-UID</string>
+				<key>modifiers</key>
+				<integer>524288</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>DOCS-SCRIPT-FILTER-UID</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>REPOS-OPEN-FILE-UID</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>DOCS-COPY-PATH-CLIPBOARD-UID</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>DOCS-COPY-PATH-CLIPBOARD-UID</string>
+				<key>modifiers</key>
+				<integer>524288</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
 		<key>E1F2A3B4-C5D6-4E7F-8A9B-0C1D2E3F4A5B</key>
 		<array>
 			<dict>
@@ -103,13 +300,36 @@
 				<false/>
 			</dict>
 		</array>
-		<key>REPOS-EXT-TRIGGER-UID</key>
+		<key>RECIPES-EXT-TRIGGER-UID</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>REPOS-SCRIPT-FILTER-UID</string>
+				<string>RECIPES-SCRIPT-FILTER-UID</string>
 				<key>modifiers</key>
 				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>RECIPES-SCRIPT-FILTER-UID</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>RECIPES-COPY-CONTENT-UID</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>B2C3D4E5-F6A7-4B5C-9D0E-1F2A3B4C5D6E</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
 				<key>modifiersubtext</key>
 				<string></string>
 				<key>vitoclose</key>
@@ -121,39 +341,6 @@
 			<dict>
 				<key>destinationuid</key>
 				<string>REPOS-CODE-SCRIPT-FILTER-UID</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-		</array>
-		<key>REPOS-SCRIPT-FILTER-UID</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>SESSIONS-SCRIPT-FILTER-UID</string>
-				<key>modifiers</key>
-				<integer>524288</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-			<dict>
-				<key>destinationuid</key>
-				<string>PASTE-PATH-CLIPBOARD-UID</string>
-				<key>modifiers</key>
-				<integer>1048576</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-			<dict>
-				<key>destinationuid</key>
-				<string>REPOS-OPEN-FILE-UID</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -195,11 +382,11 @@
 				<false/>
 			</dict>
 		</array>
-		<key>RECIPES-EXT-TRIGGER-UID</key>
+		<key>REPOS-EXT-TRIGGER-UID</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>RECIPES-SCRIPT-FILTER-UID</string>
+				<string>REPOS-SCRIPT-FILTER-UID</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -208,13 +395,13 @@
 				<false/>
 			</dict>
 		</array>
-		<key>RECIPES-SCRIPT-FILTER-UID</key>
+		<key>REPOS-SCRIPT-FILTER-UID</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>RECIPES-COPY-CONTENT-UID</string>
+				<string>SESSIONS-SCRIPT-FILTER-UID</string>
 				<key>modifiers</key>
-				<integer>0</integer>
+				<integer>524288</integer>
 				<key>modifiersubtext</key>
 				<string></string>
 				<key>vitoclose</key>
@@ -222,9 +409,19 @@
 			</dict>
 			<dict>
 				<key>destinationuid</key>
-				<string>B2C3D4E5-F6A7-4B5C-9D0E-1F2A3B4C5D6E</string>
+				<string>PASTE-PATH-CLIPBOARD-UID</string>
 				<key>modifiers</key>
 				<integer>1048576</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>REPOS-OPEN-FILE-UID</string>
+				<key>modifiers</key>
+				<integer>0</integer>
 				<key>modifiersubtext</key>
 				<string></string>
 				<key>vitoclose</key>
@@ -297,29 +494,17 @@
 		<dict>
 			<key>config</key>
 			<dict>
-				<key>concurrently</key>
+				<key>availableviaurlhandler</key>
 				<false/>
-				<key>escaping</key>
-				<integer>102</integer>
-				<key>script</key>
-				<string>#!/bin/bash
-# Parse session_id|path from arg
-IFS='|' read -r session_id project_path &lt;&lt;&lt; "$1"
-"$HOME/.cargo/bin/flow-alfred" session-content --id "$session_id" --path "$project_path" | pbcopy
-echo "Copied session to clipboard"</string>
-				<key>scriptargtype</key>
-				<integer>1</integer>
-				<key>scriptfile</key>
-				<string></string>
-				<key>type</key>
-				<integer>0</integer>
+				<key>triggerid</key>
+				<string>recipes</string>
 			</dict>
 			<key>type</key>
-			<string>alfred.workflow.action.script</string>
+			<string>alfred.workflow.trigger.external</string>
 			<key>uid</key>
-			<string>SESSIONS-COPY-CONTENT-UID</string>
+			<string>RECIPES-EXT-TRIGGER-UID</string>
 			<key>version</key>
-			<integer>2</integer>
+			<integer>1</integer>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -369,6 +554,135 @@ echo "Copied session to clipboard"</string>
 			<string>SESSIONS-SCRIPT-FILTER-UID</string>
 			<key>version</key>
 			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<true/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>2</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<false/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>recipe</string>
+				<key>queuedelaycustom</key>
+				<integer>1</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>Searching recipes...</string>
+				<key>script</key>
+				<string>#!/bin/bash
+
+flow_bin=""
+if [ -x "$HOME/.cargo/bin/flow-alfred" ]; then
+    flow_bin="$HOME/.cargo/bin/flow-alfred"
+elif [ -x "/usr/local/bin/flow-alfred" ]; then
+    flow_bin="/usr/local/bin/flow-alfred"
+elif command -v flow-alfred &amp;&gt;/dev/null; then
+    flow_bin="flow-alfred"
+else
+    echo '{"items": [{"title": "flow-alfred not found", "subtitle": "Run: cargo install --path /path/to/alfred/flow", "valid": false}]}'
+    exit 0
+fi
+
+recipes_root="${recipes_root:-~/docs/codex/recipes}"
+"$flow_bin" recipes --root "$recipes_root" "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>Search Codex recipe notes and copy the paste-ready block</string>
+				<key>title</key>
+				<string>Recipe Search</string>
+				<key>type</key>
+				<integer>4</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>RECIPES-SCRIPT-FILTER-UID</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>#!/bin/bash
+
+flow_bin=""
+if [ -x "$HOME/.cargo/bin/flow-alfred" ]; then
+    flow_bin="$HOME/.cargo/bin/flow-alfred"
+elif [ -x "/usr/local/bin/flow-alfred" ]; then
+    flow_bin="/usr/local/bin/flow-alfred"
+elif command -v flow-alfred &amp;&gt;/dev/null; then
+    flow_bin="flow-alfred"
+else
+    echo "flow-alfred not found"
+    exit 1
+fi
+
+"$flow_bin" recipe-content --path "$1" | pbcopy
+echo "Copied recipe to clipboard"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>RECIPES-COPY-CONTENT-UID</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>#!/bin/bash
+# Parse session_id|path from arg
+IFS='|' read -r session_id project_path &lt;&lt;&lt; "$1"
+"$HOME/.cargo/bin/flow-alfred" session-content --id "$session_id" --path "$project_path" | pbcopy
+echo "Copied session to clipboard"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>SESSIONS-COPY-CONTENT-UID</string>
+			<key>version</key>
+			<integer>2</integer>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -441,6 +755,21 @@ code_root="${code_root:-~/code}"
 		<dict>
 			<key>config</key>
 			<dict>
+				<key>availableviaurlhandler</key>
+				<true/>
+				<key>triggerid</key>
+				<string>code</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.external</string>
+			<key>uid</key>
+			<string>E1F2A3B4-C5D6-4E7F-8A9B-0C1D2E3F4A5B</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
 				<key>concurrently</key>
 				<false/>
 				<key>escaping</key>
@@ -460,21 +789,6 @@ code_root="${code_root:-~/code}"
 			<string>B2C3D4E5-F6A7-4B5C-9D0E-1F2A3B4C5D6E</string>
 			<key>version</key>
 			<integer>2</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>availableviaurlhandler</key>
-				<true/>
-				<key>triggerid</key>
-				<string>code</string>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.trigger.external</string>
-			<key>uid</key>
-			<string>E1F2A3B4-C5D6-4E7F-8A9B-0C1D2E3F4A5B</string>
-			<key>version</key>
-			<integer>1</integer>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -545,89 +859,6 @@ code_root="${code_root:-~/code}"
 		<dict>
 			<key>config</key>
 			<dict>
-				<key>concurrently</key>
-				<false/>
-				<key>escaping</key>
-				<integer>102</integer>
-				<key>script</key>
-				<string>#!/bin/bash
-
-flow_bin=""
-if [ -x "$HOME/.cargo/bin/flow-alfred" ]; then
-    flow_bin="$HOME/.cargo/bin/flow-alfred"
-elif [ -x "/usr/local/bin/flow-alfred" ]; then
-    flow_bin="/usr/local/bin/flow-alfred"
-elif command -v flow-alfred &amp;&gt;/dev/null; then
-    flow_bin="flow-alfred"
-else
-    echo "flow-alfred not found"
-    exit 1
-fi
-
-"$flow_bin" recipe-content --path "$1" | pbcopy
-echo "Copied recipe to clipboard"</string>
-				<key>scriptargtype</key>
-				<integer>1</integer>
-				<key>scriptfile</key>
-				<string></string>
-				<key>type</key>
-				<integer>0</integer>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.action.script</string>
-			<key>uid</key>
-			<string>RECIPES-COPY-CONTENT-UID</string>
-			<key>version</key>
-			<integer>2</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>availableviaurlhandler</key>
-				<true/>
-				<key>triggerid</key>
-				<string>repos</string>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.trigger.external</string>
-			<key>uid</key>
-			<string>REPOS-EXT-TRIGGER-UID</string>
-			<key>version</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>availableviaurlhandler</key>
-				<true/>
-				<key>triggerid</key>
-				<string>repos-code</string>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.trigger.external</string>
-			<key>uid</key>
-			<string>REPOS-CODE-EXT-TRIGGER-UID</string>
-			<key>version</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>availableviaurlhandler</key>
-				<false/>
-				<key>triggerid</key>
-				<string>recipes</string>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.trigger.external</string>
-			<key>uid</key>
-			<string>RECIPES-EXT-TRIGGER-UID</string>
-			<key>version</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
 				<key>alfredfiltersresults</key>
 				<false/>
 				<key>alfredfiltersresultsmatchmode</key>
@@ -689,6 +920,60 @@ repos_root="${repos_root:-~/repos}"
 			<string>REPOS-SCRIPT-FILTER-UID</string>
 			<key>version</key>
 			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>availableviaurlhandler</key>
+				<true/>
+				<key>triggerid</key>
+				<string>repos</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.external</string>
+			<key>uid</key>
+			<string>REPOS-EXT-TRIGGER-UID</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>json</key>
+				<string>{
+  "alfredworkflow" : {
+    "arg" : "{query}",
+    "config" : {
+      "title" : "",
+      "runningsubtext" : "",
+      "subtext" : ""
+    },
+    "variables" : {
+    }
+  }
+}</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.utility.json</string>
+			<key>uid</key>
+			<string>9D8DCB6B-8E82-414E-99D3-3FF55A6E2A12</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>availableviaurlhandler</key>
+				<true/>
+				<key>triggerid</key>
+				<string>repos-code</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.external</string>
+			<key>uid</key>
+			<string>REPOS-CODE-EXT-TRIGGER-UID</string>
+			<key>version</key>
+			<integer>1</integer>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -760,107 +1045,15 @@ exec "$flow_bin" "$1"</string>
 		<dict>
 			<key>config</key>
 			<dict>
-				<key>alfredfiltersresults</key>
-				<true/>
-				<key>alfredfiltersresultsmatchmode</key>
-				<integer>2</integer>
-				<key>argumenttreatemptyqueryasnil</key>
+				<key>availableviaurlhandler</key>
 				<false/>
-				<key>argumenttrimmode</key>
-				<integer>0</integer>
-				<key>argumenttype</key>
-				<integer>1</integer>
-				<key>escaping</key>
-				<integer>102</integer>
-				<key>keyword</key>
-				<string>recipe</string>
-				<key>queuedelaycustom</key>
-				<integer>1</integer>
-				<key>queuedelayimmediatelyinitially</key>
-				<true/>
-				<key>queuedelaymode</key>
-				<integer>0</integer>
-				<key>queuemode</key>
-				<integer>1</integer>
-				<key>runningsubtext</key>
-				<string>Searching recipes...</string>
-				<key>script</key>
-				<string>#!/bin/bash
-
-flow_bin=""
-if [ -x "$HOME/.cargo/bin/flow-alfred" ]; then
-    flow_bin="$HOME/.cargo/bin/flow-alfred"
-elif [ -x "/usr/local/bin/flow-alfred" ]; then
-    flow_bin="/usr/local/bin/flow-alfred"
-elif command -v flow-alfred &amp;&gt;/dev/null; then
-    flow_bin="flow-alfred"
-else
-    echo '{"items": [{"title": "flow-alfred not found", "subtitle": "Run: cargo install --path /path/to/alfred/flow", "valid": false}]}'
-    exit 0
-fi
-
-recipes_root="${recipes_root:-~/docs/codex/recipes}"
-"$flow_bin" recipes --root "$recipes_root" "$1"</string>
-				<key>scriptargtype</key>
-				<integer>1</integer>
-				<key>scriptfile</key>
-				<string></string>
-				<key>subtext</key>
-				<string>Search Codex recipe notes and copy the paste-ready block</string>
-				<key>title</key>
-				<string>Recipe Search</string>
-				<key>type</key>
-				<integer>4</integer>
-				<key>withspace</key>
-				<true/>
+				<key>triggerid</key>
+				<string>text_to_docs_and_text</string>
 			</dict>
 			<key>type</key>
-			<string>alfred.workflow.input.scriptfilter</string>
+			<string>alfred.workflow.trigger.external</string>
 			<key>uid</key>
-			<string>RECIPES-SCRIPT-FILTER-UID</string>
-			<key>version</key>
-			<integer>3</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>json</key>
-				<string>{
-  "alfredworkflow" : {
-    "arg" : "{query}",
-    "config" : {
-      "title" : "",
-      "runningsubtext" : "",
-      "subtext" : ""
-    },
-    "variables" : {
-    }
-  }
-}</string>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.utility.json</string>
-			<key>uid</key>
-			<string>9D8DCB6B-8E82-414E-99D3-3FF55A6E2A12</string>
-			<key>version</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>argumenttype</key>
-				<integer>0</integer>
-				<key>subtext</key>
-				<string></string>
-				<key>text</key>
-				<string></string>
-				<key>withspace</key>
-				<true/>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.input.keyword</string>
-			<key>uid</key>
-			<string>DEBCD6DE-5BEB-4EB8-8EBB-7929AEDC5A35</string>
+			<string>14F0BD39-4DD0-4942-A46F-1756A1DB4BD3</string>
 			<key>version</key>
 			<integer>1</integer>
 		</dict>
@@ -890,15 +1083,262 @@ recipes_root="${recipes_root:-~/docs/codex/recipes}"
 		<dict>
 			<key>config</key>
 			<dict>
+				<key>argumenttype</key>
+				<integer>0</integer>
+				<key>subtext</key>
+				<string></string>
+				<key>text</key>
+				<string></string>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.keyword</string>
+			<key>uid</key>
+			<string>DEBCD6DE-5BEB-4EB8-8EBB-7929AEDC5A35</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
 				<key>availableviaurlhandler</key>
-				<false/>
+				<true/>
 				<key>triggerid</key>
-				<string>text_to_docs_and_text</string>
+				<string>agents</string>
 			</dict>
 			<key>type</key>
 			<string>alfred.workflow.trigger.external</string>
 			<key>uid</key>
-			<string>14F0BD39-4DD0-4942-A46F-1756A1DB4BD3</string>
+			<string>AGENTS-EXT-TRIGGER-UID</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>availableviaurlhandler</key>
+				<true/>
+				<key>triggerid</key>
+				<string>codex-tabs</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.external</string>
+			<key>uid</key>
+			<string>CODEX-TABS-EXT-TRIGGER-UID</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>autopaste</key>
+				<false/>
+				<key>clipboardtext</key>
+				<string>{query}</string>
+				<key>ignoredynamicplaceholders</key>
+				<false/>
+				<key>transient</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.clipboard</string>
+			<key>uid</key>
+			<string>DOCS-COPY-PATH-CLIPBOARD-UID</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>2</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<false/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>codex-tabs</string>
+				<key>queuedelaycustom</key>
+				<integer>1</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>Searching open Codex tabs in Zed...</string>
+				<key>script</key>
+				<string>#!/bin/bash
+
+flow_bin=""
+if [ -x "$HOME/.cargo/bin/flow-zed-codex-tabs" ]; then
+    flow_bin="$HOME/.cargo/bin/flow-zed-codex-tabs"
+elif [ -x "/usr/local/bin/flow-zed-codex-tabs" ]; then
+    flow_bin="/usr/local/bin/flow-zed-codex-tabs"
+elif command -v flow-zed-codex-tabs &amp;&gt;/dev/null; then
+    flow_bin="flow-zed-codex-tabs"
+else
+    echo '{"items": [{"title": "flow-zed-codex-tabs not found", "subtitle": "Run: cargo install --path /path/to/alfred/flow --locked --force", "valid": false}]}'
+    exit 0
+fi
+
+zed_open_codex_sessions_snapshot="${zed_open_codex_sessions_snapshot:-$HOME/Library/Application Support/Zed/state/open-codex-sessions.json}"
+export zed_open_codex_sessions_snapshot
+
+exec "$flow_bin" "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>Search live open Codex tabs across Zed windows</string>
+				<key>title</key>
+				<string>Open Codex Tabs</string>
+				<key>type</key>
+				<integer>4</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>CODEX-TABS-SCRIPT-FILTER-UID</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>open "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>CODEX-TABS-OPEN-URL-UID</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>2</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<false/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>agents</string>
+				<key>queuedelaycustom</key>
+				<integer>1</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>Searching run-owned agents...</string>
+				<key>script</key>
+				<string>#!/bin/bash
+
+flow_bin=""
+if [ -x "$HOME/.cargo/bin/flow-agents" ]; then
+    flow_bin="$HOME/.cargo/bin/flow-agents"
+elif [ -x "/usr/local/bin/flow-agents" ]; then
+    flow_bin="/usr/local/bin/flow-agents"
+elif command -v flow-agents &amp;&gt;/dev/null; then
+    flow_bin="flow-agents"
+else
+    echo '{"items": [{"title": "flow-agents not found", "subtitle": "Run: cargo install --path /path/to/alfred/flow --locked --force", "valid": false}]}'
+    exit 0
+fi
+
+agents_catalog="${agents_catalog:-$HOME/run/.ai/artifacts/codex/run-agent-skills.json}"
+export agents_catalog
+
+exec "$flow_bin" "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>Search focused run-owned Codex agent skill files from ~/run</string>
+				<key>title</key>
+				<string>Agents Search</string>
+				<key>type</key>
+				<integer>4</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>AGENTS-SCRIPT-FILTER-UID</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>availableviaurlhandler</key>
+				<true/>
+				<key>triggerid</key>
+				<string>docs</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.external</string>
+			<key>uid</key>
+			<string>DOCS-EXT-TRIGGER-UID</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>json</key>
+				<string>{
+  "alfredworkflow" : {
+    "arg" : "{query}",
+    "config" : {
+      "title" : "",
+      "runningsubtext" : "",
+      "subtext" : ""
+    },
+    "variables" : {
+    }
+  }
+}</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.utility.json</string>
+			<key>uid</key>
+			<string>1C06903F-8D61-47F7-AC4B-20FB6379D99E</string>
 			<key>version</key>
 			<integer>1</integer>
 		</dict>
@@ -928,6 +1368,149 @@ recipes_root="${recipes_root:-~/docs/codex/recipes}"
 		<dict>
 			<key>config</key>
 			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>2</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<false/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>docs-recent</string>
+				<key>queuedelaycustom</key>
+				<integer>1</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>Searching recent docs...</string>
+				<key>script</key>
+				<string>#!/bin/bash
+
+flow_bin=""
+if [ -x "$HOME/.cargo/bin/flow-alfred" ]; then
+    flow_bin="$HOME/.cargo/bin/flow-alfred"
+elif [ -x "/usr/local/bin/flow-alfred" ]; then
+    flow_bin="/usr/local/bin/flow-alfred"
+elif command -v flow-alfred &amp;&gt;/dev/null; then
+    flow_bin="flow-alfred"
+else
+    echo '{"items": [{"title": "flow-alfred not found", "subtitle": "Run: cargo install --path /path/to/alfred/flow", "valid": false}]}'
+    exit 0
+fi
+
+docs_root="${docs_root:-~/docs}"
+"$flow_bin" docs-recent --root "$docs_root" --days 5 "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>Search markdown docs touched in the last 5 days</string>
+				<key>title</key>
+				<string>Recent Docs Search</string>
+				<key>type</key>
+				<integer>4</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>DOCS-RECENT-SCRIPT-FILTER-UID</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>2</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<false/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>docs</string>
+				<key>queuedelaycustom</key>
+				<integer>1</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>Searching docs...</string>
+				<key>script</key>
+				<string>#!/bin/bash
+
+flow_bin=""
+if [ -x "$HOME/.cargo/bin/flow-alfred" ]; then
+    flow_bin="$HOME/.cargo/bin/flow-alfred"
+elif [ -x "/usr/local/bin/flow-alfred" ]; then
+    flow_bin="/usr/local/bin/flow-alfred"
+elif command -v flow-alfred &amp;&gt;/dev/null; then
+    flow_bin="flow-alfred"
+else
+    echo '{"items": [{"title": "flow-alfred not found", "subtitle": "Run: cargo install --path /path/to/alfred/flow", "valid": false}]}'
+    exit 0
+fi
+
+docs_root="${docs_root:-~/docs}"
+"$flow_bin" docs --root "$docs_root" "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>Search markdown docs in ~/docs</string>
+				<key>title</key>
+				<string>Docs Search</string>
+				<key>type</key>
+				<integer>4</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>DOCS-SCRIPT-FILTER-UID</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>availableviaurlhandler</key>
+				<true/>
+				<key>triggerid</key>
+				<string>docs-recent</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.external</string>
+			<key>uid</key>
+			<string>DOCS-RECENT-EXT-TRIGGER-UID</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
 				<key>availableviaurlhandler</key>
 				<false/>
 				<key>triggerid</key>
@@ -937,30 +1520,6 @@ recipes_root="${recipes_root:-~/docs/codex/recipes}"
 			<string>alfred.workflow.trigger.external</string>
 			<key>uid</key>
 			<string>WINDOWS-EXT-TRIGGER-UID</string>
-			<key>version</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>json</key>
-				<string>{
-  "alfredworkflow" : {
-    "arg" : "{query}",
-    "config" : {
-      "title" : "",
-      "runningsubtext" : "",
-      "subtext" : ""
-    },
-    "variables" : {
-    }
-  }
-}</string>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.utility.json</string>
-			<key>uid</key>
-			<string>WINDOWS-JSON-UID</string>
 			<key>version</key>
 			<integer>1</integer>
 		</dict>
@@ -1036,6 +1595,30 @@ recipes_root="${recipes_root:-~/docs/codex/recipes}"
 			<key>version</key>
 			<integer>3</integer>
 		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>json</key>
+				<string>{
+  "alfredworkflow" : {
+    "arg" : "{query}",
+    "config" : {
+      "title" : "",
+      "runningsubtext" : "",
+      "subtext" : ""
+    },
+    "variables" : {
+    }
+  }
+}</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.utility.json</string>
+			<key>uid</key>
+			<string>WINDOWS-JSON-UID</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
 	</array>
 	<key>readme</key>
 	<string>Extension of flow: https://github.com/nikivdev/flow</string>
@@ -1044,9 +1627,16 @@ recipes_root="${recipes_root:-~/docs/codex/recipes}"
 		<key>14F0BD39-4DD0-4942-A46F-1756A1DB4BD3</key>
 		<dict>
 			<key>xpos</key>
-			<real>80</real>
+			<real>30</real>
 			<key>ypos</key>
-			<real>490</real>
+			<real>445</real>
+		</dict>
+		<key>1C06903F-8D61-47F7-AC4B-20FB6379D99E</key>
+		<dict>
+			<key>xpos</key>
+			<real>245</real>
+			<key>ypos</key>
+			<real>600</real>
 		</dict>
 		<key>2542EB08-00D0-492F-9E91-61C123D9D25F</key>
 		<dict>
@@ -1076,6 +1666,41 @@ recipes_root="${recipes_root:-~/docs/codex/recipes}"
 			<key>ypos</key>
 			<real>490</real>
 		</dict>
+		<key>AGENTS-EXT-TRIGGER-UID</key>
+		<dict>
+			<key>xpos</key>
+			<real>100</real>
+			<key>ypos</key>
+			<real>545</real>
+		</dict>
+		<key>AGENTS-SCRIPT-FILTER-UID</key>
+		<dict>
+			<key>xpos</key>
+			<real>345</real>
+			<key>ypos</key>
+			<real>565</real>
+		</dict>
+		<key>CODEX-TABS-EXT-TRIGGER-UID</key>
+		<dict>
+			<key>xpos</key>
+			<real>100</real>
+			<key>ypos</key>
+			<real>620</real>
+		</dict>
+		<key>CODEX-TABS-OPEN-URL-UID</key>
+		<dict>
+			<key>xpos</key>
+			<real>555</real>
+			<key>ypos</key>
+			<real>620</real>
+		</dict>
+		<key>CODEX-TABS-SCRIPT-FILTER-UID</key>
+		<dict>
+			<key>xpos</key>
+			<real>355</real>
+			<key>ypos</key>
+			<real>620</real>
+		</dict>
 		<key>B2C3D4E5-F6A7-4B5C-9D0E-1F2A3B4C5D6E</key>
 		<dict>
 			<key>xpos</key>
@@ -1089,6 +1714,41 @@ recipes_root="${recipes_root:-~/docs/codex/recipes}"
 			<real>250</real>
 			<key>ypos</key>
 			<real>490</real>
+		</dict>
+		<key>DOCS-COPY-PATH-CLIPBOARD-UID</key>
+		<dict>
+			<key>xpos</key>
+			<real>755</real>
+			<key>ypos</key>
+			<real>565</real>
+		</dict>
+		<key>DOCS-EXT-TRIGGER-UID</key>
+		<dict>
+			<key>xpos</key>
+			<real>100</real>
+			<key>ypos</key>
+			<real>600</real>
+		</dict>
+		<key>DOCS-RECENT-EXT-TRIGGER-UID</key>
+		<dict>
+			<key>xpos</key>
+			<real>100</real>
+			<key>ypos</key>
+			<real>675</real>
+		</dict>
+		<key>DOCS-RECENT-SCRIPT-FILTER-UID</key>
+		<dict>
+			<key>xpos</key>
+			<real>355</real>
+			<key>ypos</key>
+			<real>675</real>
+		</dict>
+		<key>DOCS-SCRIPT-FILTER-UID</key>
+		<dict>
+			<key>xpos</key>
+			<real>280</real>
+			<key>ypos</key>
+			<real>675</real>
 		</dict>
 		<key>E1F2A3B4-C5D6-4E7F-8A9B-0C1D2E3F4A5B</key>
 		<dict>
@@ -1111,12 +1771,26 @@ recipes_root="${recipes_root:-~/docs/codex/recipes}"
 			<key>ypos</key>
 			<real>195</real>
 		</dict>
-		<key>REPOS-EXT-TRIGGER-UID</key>
+		<key>RECIPES-COPY-CONTENT-UID</key>
+		<dict>
+			<key>xpos</key>
+			<real>500</real>
+			<key>ypos</key>
+			<real>15</real>
+		</dict>
+		<key>RECIPES-EXT-TRIGGER-UID</key>
 		<dict>
 			<key>xpos</key>
 			<real>100</real>
 			<key>ypos</key>
-			<real>270</real>
+			<real>15</real>
+		</dict>
+		<key>RECIPES-SCRIPT-FILTER-UID</key>
+		<dict>
+			<key>xpos</key>
+			<real>300</real>
+			<key>ypos</key>
+			<real>15</real>
 		</dict>
 		<key>REPOS-CODE-EXT-TRIGGER-UID</key>
 		<dict>
@@ -1125,19 +1799,26 @@ recipes_root="${recipes_root:-~/docs/codex/recipes}"
 			<key>ypos</key>
 			<real>380</real>
 		</dict>
-		<key>REPOS-OPEN-FILE-UID</key>
-		<dict>
-			<key>xpos</key>
-			<real>555</real>
-			<key>ypos</key>
-			<real>270</real>
-		</dict>
 		<key>REPOS-CODE-SCRIPT-FILTER-UID</key>
 		<dict>
 			<key>xpos</key>
 			<real>355</real>
 			<key>ypos</key>
 			<real>380</real>
+		</dict>
+		<key>REPOS-EXT-TRIGGER-UID</key>
+		<dict>
+			<key>xpos</key>
+			<real>100</real>
+			<key>ypos</key>
+			<real>270</real>
+		</dict>
+		<key>REPOS-OPEN-FILE-UID</key>
+		<dict>
+			<key>xpos</key>
+			<real>555</real>
+			<key>ypos</key>
+			<real>270</real>
 		</dict>
 		<key>REPOS-SCRIPT-FILTER-UID</key>
 		<dict>
@@ -1232,6 +1913,48 @@ recipes_root="${recipes_root:-~/docs/codex/recipes}"
 			<string>textfield</string>
 			<key>variable</key>
 			<string>repos_root</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string>~/docs</string>
+				<key>placeholder</key>
+				<string>~/docs</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Root directory to scan for markdown docs</string>
+			<key>label</key>
+			<string>Docs Root</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>docs_root</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string>~/Library/Application Support/Zed/state/open-codex-sessions.json</string>
+				<key>placeholder</key>
+				<string>~/Library/Application Support/Zed/state/open-codex-sessions.json</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Path to the live Zed open Codex tabs snapshot</string>
+			<key>label</key>
+			<string>Zed Codex Snapshot</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>zed_open_codex_sessions_snapshot</string>
 		</dict>
 	</array>
 	<key>version</key>

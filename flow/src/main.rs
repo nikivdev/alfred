@@ -1,12 +1,15 @@
 use std::collections::HashSet;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::thread;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use clap::{Parser, Subcommand};
 use flow_alfred::{
     discover_repos_cached, discover_repos_structured_cached, expand_path, fuzzy_match, fuzzy_score,
     reload_workflow, CodeEntry, Icon, Item, Output,
 };
+
+const DOC_EMPTY_QUERY_RESULT_LIMIT: usize = 40;
 
 #[derive(Parser)]
 #[command(name = "flow-alfred")]
@@ -64,6 +67,32 @@ enum Commands {
         /// Root directory to scan
         #[arg(long, default_value = "~/docs/codex/recipes")]
         root: String,
+    },
+
+    /// Search markdown docs under ~/docs
+    Docs {
+        /// Search query
+        #[arg(default_value = "")]
+        query: String,
+
+        /// Root directory to scan
+        #[arg(long, default_value = "~/docs")]
+        root: String,
+    },
+
+    /// Search markdown docs under ~/docs touched recently
+    DocsRecent {
+        /// Search query
+        #[arg(default_value = "")]
+        query: String,
+
+        /// Root directory to scan
+        #[arg(long, default_value = "~/docs")]
+        root: String,
+
+        /// Number of recent days to include
+        #[arg(long, default_value_t = 5)]
+        days: u64,
     },
 
     /// Get recipe clipboard content from a markdown file
@@ -173,6 +202,8 @@ fn main() {
             code_root,
         } => run_repos_code_search(&query, &repos_root, &code_root),
         Commands::Recipes { query, root } => run_recipe_search(&query, &root),
+        Commands::Docs { query, root } => run_docs_search(&query, &root),
+        Commands::DocsRecent { query, root, days } => run_recent_docs_search(&query, &root, days),
         Commands::RecipeContent { path } => run_recipe_content(&path),
         Commands::Link {
             workflow_dir,
@@ -359,6 +390,7 @@ fn build_repo_items(query: &str, entries: Vec<RepoSearchEntry>) -> Vec<Item> {
 fn build_repo_item(entry: RepoSearchEntry) -> Item {
     let path_str = entry.path.to_string_lossy().to_string();
     let relative_path = format!("{}/{}", entry.root, entry.display);
+    let copy_path = format!("{} ", relative_path);
     let display = condensed_repo_display(&entry.display);
 
     let item = if let Some(subtitle) = entry.subtitle.as_deref() {
@@ -374,7 +406,7 @@ fn build_repo_item(entry: RepoSearchEntry) -> Item {
         .file_type()
         .icon(Icon::fileicon(&path_str))
         .quicklook(&path_str)
-        .copy_text(&relative_path)
+        .copy_text(&copy_path)
         .cmd_mod(&relative_path, "Paste path")
         .alt_mod(&path_str, "Browse sessions")
 }
@@ -420,6 +452,25 @@ struct RecipeEntry {
     summary: String,
     paste_text: String,
     search_text: String,
+}
+
+#[derive(Debug, Clone)]
+struct DocCandidate {
+    path: PathBuf,
+    relative_path: String,
+    configured_path: String,
+    activity_unix: u64,
+}
+
+#[derive(Debug, Clone)]
+struct DocEntry {
+    path: PathBuf,
+    relative_path: String,
+    configured_path: String,
+    title: String,
+    summary: String,
+    search_text: String,
+    activity_unix: u64,
 }
 
 fn run_recipe_search(query: &str, root: &str) {
@@ -538,12 +589,7 @@ fn load_recipe_entry(
     root: Option<&std::path::Path>,
 ) -> Option<RecipeEntry> {
     let raw = std::fs::read_to_string(path).ok()?;
-    let title = parse_recipe_title(&raw).unwrap_or_else(|| {
-        path.file_stem()
-            .and_then(|value| value.to_str())
-            .unwrap_or("recipe")
-            .replace('-', " ")
-    });
+    let title = parse_recipe_title(&raw, path).unwrap_or_else(|| humanize_markdown_file_name(path));
     let summary = parse_recipe_summary(&raw);
     let paste_text = parse_recipe_paste_text(&raw).unwrap_or_else(|| raw.trim().to_string());
     let relative_path = root
@@ -568,19 +614,418 @@ fn load_recipe_entry(
     })
 }
 
-fn parse_recipe_title(raw: &str) -> Option<String> {
-    raw.lines().find_map(|line| {
-        line.strip_prefix("# ")
-            .map(|value| value.trim().to_string())
+fn run_docs_search(query: &str, root: &str) {
+    run_docs_search_with_limit(query, root, None);
+}
+
+fn run_recent_docs_search(query: &str, root: &str, days: u64) {
+    run_docs_search_with_limit(query, root, Some(days));
+}
+
+fn run_docs_search_with_limit(query: &str, root: &str, recent_days: Option<u64>) {
+    let root_path = expand_path(root);
+
+    if !root_path.exists() {
+        print_missing_root(root, "Check your docs root");
+        return;
+    }
+
+    let candidates = discover_doc_candidates(&root_path, root);
+    if candidates.is_empty() {
+        let scope = recent_days
+            .map(|days| format!("in {} updated in the last {} days", root, days))
+            .unwrap_or_else(|| format!("in {}", root));
+        Output::new(vec![Item::new("No docs found", scope)
+            .valid(false)
+            .icon(Icon::path(
+                "/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/GenericFolderIcon.icns",
+            ))])
+        .print();
+        return;
+    }
+
+    let query = query.trim();
+    let (filtered, hidden_count) = if query.is_empty() {
+        load_recent_doc_entries(candidates, recent_days)
+    } else {
+        let docs = candidates
+            .into_iter()
+            .filter_map(load_doc_entry)
+            .collect::<Vec<_>>();
+        (filter_and_sort_docs(query, docs, recent_days), 0)
+    };
+
+    if filtered.is_empty() {
+        let scope = recent_days
+            .map(|days| format!("in {} updated in the last {} days", root, days))
+            .unwrap_or_else(|| format!("in {}", root));
+        Output::new(vec![Item::new("No docs found", scope)
+            .valid(false)
+            .icon(Icon::path(
+                "/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/GenericFolderIcon.icns",
+            ))])
+        .print();
+        return;
+    }
+
+    let items = build_doc_items(query, filtered, hidden_count);
+    Output::new(items).print();
+}
+
+fn discover_doc_candidates(root: &Path, configured_root: &str) -> Vec<DocCandidate> {
+    let mut pending = vec![root.to_path_buf()];
+    let mut entries = Vec::new();
+
+    while let Some(dir) = pending.pop() {
+        let read_dir = match std::fs::read_dir(&dir) {
+            Ok(value) => value,
+            Err(_) => continue,
+        };
+        for entry in read_dir.flatten() {
+            let path = entry.path();
+            let file_type = match entry.file_type() {
+                Ok(value) => value,
+                Err(_) => continue,
+            };
+
+            if file_type.is_dir() {
+                if file_type.is_symlink() {
+                    continue;
+                }
+                pending.push(path);
+                continue;
+            }
+
+            if !is_markdown_path(&path) {
+                continue;
+            }
+
+            let metadata = match std::fs::metadata(&path) {
+                Ok(value) => value,
+                Err(_) => continue,
+            };
+            let relative_path = path
+                .strip_prefix(root)
+                .ok()
+                .map(|value| value.to_string_lossy().to_string())
+                .unwrap_or_else(|| path.to_string_lossy().to_string());
+            let configured_path = configured_root_path(configured_root, &relative_path);
+
+            entries.push(DocCandidate {
+                path,
+                relative_path,
+                configured_path,
+                activity_unix: doc_activity_unix(&metadata),
+            });
+        }
+    }
+
+    entries
+}
+
+#[cfg(test)]
+fn discover_doc_entries(root: &Path, configured_root: &str) -> Vec<DocEntry> {
+    discover_doc_candidates(root, configured_root)
+        .into_iter()
+        .filter_map(load_doc_entry)
+        .collect()
+}
+
+fn load_recent_doc_entries(
+    candidates: Vec<DocCandidate>,
+    recent_days: Option<u64>,
+) -> (Vec<DocEntry>, usize) {
+    let cutoff_unix = recent_days.map(recent_cutoff_unix);
+    let mut candidates = candidates
+        .into_iter()
+        .filter(|entry| {
+            cutoff_unix
+                .map(|cutoff| entry.activity_unix >= cutoff)
+                .unwrap_or(true)
+        })
+        .collect::<Vec<_>>();
+
+    candidates.sort_by(|left, right| {
+        right
+            .activity_unix
+            .cmp(&left.activity_unix)
+            .then_with(|| left.relative_path.cmp(&right.relative_path))
+    });
+
+    let hidden_count = candidates
+        .len()
+        .saturating_sub(DOC_EMPTY_QUERY_RESULT_LIMIT);
+    let mut docs = candidates
+        .into_iter()
+        .take(DOC_EMPTY_QUERY_RESULT_LIMIT)
+        .filter_map(load_doc_entry)
+        .collect::<Vec<_>>();
+    docs.sort_by(|left, right| {
+        right
+            .activity_unix
+            .cmp(&left.activity_unix)
+            .then_with(|| left.title.cmp(&right.title))
+    });
+
+    (docs, hidden_count)
+}
+
+fn load_doc_entry(candidate: DocCandidate) -> Option<DocEntry> {
+    let raw = std::fs::read_to_string(&candidate.path).ok()?;
+    let absolute_path = candidate
+        .path
+        .canonicalize()
+        .unwrap_or_else(|_| candidate.path.clone());
+    let title = parse_markdown_title(&raw, &candidate.path)
+        .unwrap_or_else(|| humanize_markdown_file_name(&candidate.path));
+    let summary = parse_markdown_summary(&raw);
+    let file_name = candidate
+        .path
+        .file_name()
+        .and_then(|value| value.to_str())
+        .unwrap_or_default();
+    let search_text = format!(
+        "{} {} {} {} {}",
+        title, candidate.relative_path, candidate.configured_path, file_name, summary
+    );
+
+    Some(DocEntry {
+        path: absolute_path,
+        relative_path: candidate.relative_path,
+        configured_path: candidate.configured_path,
+        title,
+        summary,
+        search_text,
+        activity_unix: candidate.activity_unix,
     })
 }
 
+fn filter_and_sort_docs(
+    query: &str,
+    docs: Vec<DocEntry>,
+    recent_days: Option<u64>,
+) -> Vec<DocEntry> {
+    let query = query.trim();
+    let cutoff_unix = recent_days.map(recent_cutoff_unix);
+    let mut filtered = if query.is_empty() {
+        docs.into_iter()
+            .filter(|entry| {
+                cutoff_unix
+                    .map(|cutoff| entry.activity_unix >= cutoff)
+                    .unwrap_or(true)
+            })
+            .map(|entry| (entry, 0))
+            .collect::<Vec<_>>()
+    } else {
+        docs.into_iter()
+            .filter(|entry| {
+                cutoff_unix
+                    .map(|cutoff| entry.activity_unix >= cutoff)
+                    .unwrap_or(true)
+            })
+            .filter_map(|entry| doc_match_score(query, &entry).map(|score| (entry, score)))
+            .collect::<Vec<_>>()
+    };
+
+    if query.is_empty() {
+        filtered.sort_by(|(left, _), (right, _)| {
+            right
+                .activity_unix
+                .cmp(&left.activity_unix)
+                .then_with(|| left.title.cmp(&right.title))
+        });
+    } else {
+        filtered.sort_by(|(left, left_score), (right, right_score)| {
+            right_score
+                .cmp(left_score)
+                .then_with(|| right.activity_unix.cmp(&left.activity_unix))
+                .then_with(|| left.title.cmp(&right.title))
+        });
+    }
+
+    filtered.into_iter().map(|(entry, _)| entry).collect()
+}
+
+fn build_doc_item(entry: DocEntry) -> Item {
+    let path_str = entry.path.to_string_lossy().to_string();
+    let subtitle = if entry.summary.is_empty() {
+        format!(
+            "{}  |  {}",
+            format_recent_age(entry.activity_unix),
+            entry.relative_path
+        )
+    } else {
+        format!(
+            "{}  |  {}  |  {}",
+            format_recent_age(entry.activity_unix),
+            truncate_markdown_summary(&entry.summary, 120),
+            entry.relative_path
+        )
+    };
+
+    Item::new(&entry.title, subtitle)
+        .uid(&path_str)
+        .arg(&path_str)
+        .match_field(&entry.search_text)
+        .autocomplete(&entry.title)
+        .quicklook(&path_str)
+        .icon(Icon::fileicon(&path_str))
+        .copy_text(&path_str)
+        .cmd_mod(&path_str, "Copy absolute path")
+        .alt_mod(&entry.configured_path, "Copy configured path")
+}
+
+fn build_doc_items(query: &str, docs: Vec<DocEntry>, hidden_count: usize) -> Vec<Item> {
+    let mut items = docs.into_iter().map(build_doc_item).collect::<Vec<_>>();
+    if query.is_empty() && hidden_count > 0 {
+        items.push(
+            Item::new(
+                format!("Type to search {} more docs", hidden_count),
+                format!(
+                    "Showing the most recent {} docs for instant browse",
+                    DOC_EMPTY_QUERY_RESULT_LIMIT
+                ),
+            )
+            .valid(false)
+            .icon(Icon::path(
+                "/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/GenericFolderIcon.icns",
+            )),
+        );
+    }
+
+    items
+}
+
+fn doc_match_score(query: &str, entry: &DocEntry) -> Option<i32> {
+    if query.is_empty() {
+        return Some(0);
+    }
+
+    let query_lower = query.to_lowercase();
+    let mut best = -1;
+    for field in [
+        entry.title.as_str(),
+        entry.relative_path.as_str(),
+        entry.configured_path.as_str(),
+        entry.search_text.as_str(),
+    ] {
+        let score = fuzzy_score(query, field);
+        if score > best {
+            best = score;
+        }
+    }
+
+    if best < 0 {
+        return None;
+    }
+
+    let title_lower = entry.title.to_lowercase();
+    let relative_lower = entry.relative_path.to_lowercase();
+    let summary_lower = entry.summary.to_lowercase();
+    let mut score = best;
+
+    if title_lower.contains(&query_lower) {
+        score += 200;
+    }
+    if relative_lower.contains(&query_lower) {
+        score += 120;
+    }
+    if summary_lower.contains(&query_lower) {
+        score += 40;
+    }
+
+    Some(score)
+}
+
+fn parse_recipe_title(raw: &str, path: &Path) -> Option<String> {
+    parse_markdown_title(raw, path)
+}
+
 fn parse_recipe_summary(raw: &str) -> String {
+    parse_markdown_summary(raw)
+}
+
+fn parse_markdown_title(raw: &str, path: &Path) -> Option<String> {
+    parse_frontmatter_value(raw, "title")
+        .or_else(|| parse_frontmatter_value(raw, "name"))
+        .or_else(|| parse_markdown_h1(raw))
+        .or_else(|| Some(humanize_markdown_file_name(path)))
+}
+
+fn parse_frontmatter_value(raw: &str, key: &str) -> Option<String> {
+    let mut lines = raw.lines();
+    if lines.next()?.trim() != "---" {
+        return None;
+    }
+
+    for line in lines {
+        let trimmed = line.trim();
+        if trimmed == "---" {
+            break;
+        }
+        let Some((candidate_key, value)) = trimmed.split_once(':') else {
+            continue;
+        };
+        if candidate_key.trim() != key {
+            continue;
+        }
+        let value = value.trim().trim_matches('"').trim_matches('\'');
+        if !value.is_empty() {
+            return Some(value.to_string());
+        }
+    }
+
+    None
+}
+
+fn parse_markdown_h1(raw: &str) -> Option<String> {
+    let mut in_frontmatter = false;
+    let mut saw_frontmatter_boundary = false;
+
+    for line in raw.lines() {
+        let trimmed = line.trim();
+        if !saw_frontmatter_boundary && trimmed == "---" {
+            saw_frontmatter_boundary = true;
+            in_frontmatter = true;
+            continue;
+        }
+        if in_frontmatter {
+            if trimmed == "---" {
+                in_frontmatter = false;
+            }
+            continue;
+        }
+        if let Some(value) = trimmed.strip_prefix("# ") {
+            let title = value.trim();
+            if !title.is_empty() {
+                return Some(title.to_string());
+            }
+        }
+    }
+
+    None
+}
+
+fn parse_markdown_summary(raw: &str) -> String {
     let mut in_code_block = false;
+    let mut in_frontmatter = false;
+    let mut saw_frontmatter_boundary = false;
     let mut paragraph = Vec::new();
 
     for line in raw.lines() {
         let trimmed = line.trim();
+
+        if !saw_frontmatter_boundary && trimmed == "---" {
+            saw_frontmatter_boundary = true;
+            in_frontmatter = true;
+            continue;
+        }
+        if in_frontmatter {
+            if trimmed == "---" {
+                in_frontmatter = false;
+            }
+            continue;
+        }
         if trimmed.starts_with("```") {
             in_code_block = !in_code_block;
             continue;
@@ -604,6 +1049,80 @@ fn parse_recipe_summary(raw: &str) -> String {
     }
 
     paragraph.join(" ")
+}
+
+fn humanize_markdown_file_name(path: &Path) -> String {
+    path.file_stem()
+        .and_then(|value| value.to_str())
+        .unwrap_or("document")
+        .replace('-', " ")
+        .replace('_', " ")
+}
+
+fn configured_root_path(root: &str, relative_path: &str) -> String {
+    let trimmed_root = root.trim_end_matches('/');
+    if trimmed_root.is_empty() {
+        relative_path.to_string()
+    } else {
+        format!("{}/{}", trimmed_root, relative_path)
+    }
+}
+
+fn truncate_markdown_summary(value: &str, max_chars: usize) -> String {
+    let char_count = value.chars().count();
+    if char_count <= max_chars {
+        return value.to_string();
+    }
+
+    let keep = max_chars.saturating_sub(3);
+    format!("{}...", value.chars().take(keep).collect::<String>())
+}
+
+fn doc_activity_unix(metadata: &std::fs::Metadata) -> u64 {
+    let modified = metadata.modified().ok().and_then(system_time_to_unix);
+    let created = metadata.created().ok().and_then(system_time_to_unix);
+    modified.into_iter().chain(created).max().unwrap_or(0)
+}
+
+fn system_time_to_unix(value: SystemTime) -> Option<u64> {
+    value
+        .duration_since(UNIX_EPOCH)
+        .ok()
+        .map(|duration| duration.as_secs())
+}
+
+fn recent_cutoff_unix(days: u64) -> u64 {
+    let window = Duration::from_secs(days.saturating_mul(24 * 60 * 60));
+    SystemTime::now()
+        .checked_sub(window)
+        .and_then(system_time_to_unix)
+        .unwrap_or(0)
+}
+
+fn format_recent_age(activity_unix: u64) -> String {
+    if activity_unix == 0 {
+        return "unknown".to_string();
+    }
+
+    let now = system_time_to_unix(SystemTime::now()).unwrap_or(activity_unix);
+    let diff = now.saturating_sub(activity_unix);
+
+    if diff < 60 {
+        "just now".to_string()
+    } else if diff < 3600 {
+        format!("{}m ago", diff / 60)
+    } else if diff < 86400 {
+        format!("{}h ago", diff / 3600)
+    } else {
+        format!("{}d ago", diff / 86400)
+    }
+}
+
+fn is_markdown_path(path: &Path) -> bool {
+    matches!(
+        path.extension().and_then(|value| value.to_str()),
+        Some("md") | Some("markdown") | Some("MD") | Some("MARKDOWN")
+    )
 }
 
 fn parse_recipe_paste_text(raw: &str) -> Option<String> {
@@ -1121,5 +1640,163 @@ fn run_raise_window(arg: &str) {
         let _ = Command::new("osascript")
             .args(["-l", "JavaScript", "-e", &jxa])
             .output();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        configured_root_path, filter_and_sort_docs, parse_frontmatter_value, parse_markdown_h1,
+        parse_markdown_summary, parse_markdown_title, recent_cutoff_unix, DocEntry,
+    };
+    use std::fs;
+    use std::path::{Path, PathBuf};
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn temp_dir(name: &str) -> PathBuf {
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let path = std::env::temp_dir().join(format!("flow-alfred-{name}-{unique}"));
+        fs::create_dir_all(&path).unwrap();
+        path
+    }
+
+    fn write_file(path: &Path, contents: &str) {
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).unwrap();
+        }
+        fs::write(path, contents).unwrap();
+    }
+
+    #[test]
+    fn markdown_title_prefers_frontmatter() {
+        let path = Path::new("/tmp/example.md");
+        let raw = "---\ntitle: Frontmatter Title\n---\n# Heading Title\n";
+        assert_eq!(
+            parse_markdown_title(raw, path).as_deref(),
+            Some("Frontmatter Title")
+        );
+    }
+
+    #[test]
+    fn markdown_title_falls_back_to_h1() {
+        let path = Path::new("/tmp/example.md");
+        let raw = "# Heading Title\n\nParagraph";
+        assert_eq!(parse_markdown_h1(raw).as_deref(), Some("Heading Title"));
+        assert_eq!(
+            parse_markdown_title(raw, path).as_deref(),
+            Some("Heading Title")
+        );
+    }
+
+    #[test]
+    fn markdown_summary_skips_frontmatter_and_code_blocks() {
+        let raw = "---\ntitle: Hello\n---\n# Heading\n\n```md\nignored\n```\n\nFirst paragraph.\nSecond sentence.\n\n## Next\nLater";
+        assert_eq!(
+            parse_markdown_summary(raw),
+            "First paragraph. Second sentence."
+        );
+    }
+
+    #[test]
+    fn frontmatter_value_requires_top_boundary() {
+        let raw = "intro\n---\ntitle: Wrong\n---";
+        assert_eq!(parse_frontmatter_value(raw, "title"), None);
+    }
+
+    #[test]
+    fn frontmatter_value_skips_non_key_lines() {
+        let raw = "---\n# comment\n- list item\ntitle: Right\n---";
+        assert_eq!(
+            parse_frontmatter_value(raw, "title").as_deref(),
+            Some("Right")
+        );
+    }
+
+    #[test]
+    fn configured_root_display_keeps_tilde_prefix() {
+        assert_eq!(
+            configured_root_path("~/docs", "plan/example.md"),
+            "~/docs/plan/example.md"
+        );
+    }
+
+    fn doc_entry(path: &str, title: &str, activity_unix: u64) -> DocEntry {
+        DocEntry {
+            path: PathBuf::from(path),
+            relative_path: path.to_string(),
+            configured_path: format!("~/docs/{path}"),
+            title: title.to_string(),
+            summary: String::new(),
+            search_text: title.to_string(),
+            activity_unix,
+        }
+    }
+
+    #[test]
+    fn filter_and_sort_docs_keeps_recent_first_for_empty_query() {
+        let docs = vec![
+            doc_entry("older.md", "Older", 10),
+            doc_entry("newer.md", "Newer", 20),
+            doc_entry("newest.md", "Newest", 30),
+        ];
+
+        let sorted = filter_and_sort_docs("", docs, None);
+        let titles = sorted
+            .into_iter()
+            .map(|entry| entry.title)
+            .collect::<Vec<_>>();
+        assert_eq!(titles, vec!["Newest", "Newer", "Older"]);
+    }
+
+    #[test]
+    fn filter_and_sort_docs_applies_recent_window() {
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        let docs = vec![
+            doc_entry("recent.md", "Recent", now.saturating_sub(60)),
+            doc_entry(
+                "stale.md",
+                "Stale",
+                recent_cutoff_unix(5).saturating_sub(60),
+            ),
+        ];
+
+        let sorted = filter_and_sort_docs("", docs, Some(5));
+        let titles = sorted
+            .into_iter()
+            .map(|entry| entry.title)
+            .collect::<Vec<_>>();
+        assert_eq!(titles, vec!["Recent"]);
+    }
+
+    #[test]
+    fn filter_and_sort_docs_includes_readme_hidden_and_markdown() {
+        let root = temp_dir("docs-discovery");
+        write_file(&root.join("README.md"), "# Root README\n");
+        write_file(&root.join(".ai/agent.md"), "# Agent Note\n");
+        write_file(&root.join("nested/doc.markdown"), "# Nested Doc\n");
+
+        let mut entries = super::discover_doc_entries(&root, "~/docs");
+        entries.sort_by(|left, right| left.relative_path.cmp(&right.relative_path));
+        let relative_paths = entries
+            .into_iter()
+            .map(|entry| entry.relative_path)
+            .collect::<Vec<_>>();
+
+        assert_eq!(
+            relative_paths,
+            vec![
+                ".ai/agent.md".to_string(),
+                "README.md".to_string(),
+                "nested/doc.markdown".to_string()
+            ]
+        );
+
+        let _ = fs::remove_dir_all(root);
     }
 }
